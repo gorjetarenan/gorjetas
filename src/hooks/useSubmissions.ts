@@ -85,12 +85,10 @@ export function useSubmissions() {
   }, []);
 
   const getWinsByDate = useCallback((date: string) => {
-    const target = new Date(date);
     return wins.filter(w => {
-      const winDate = new Date(w.date);
-      return winDate.getFullYear() === target.getFullYear() &&
-        winDate.getMonth() === target.getMonth() &&
-        winDate.getDate() === target.getDate();
+      const winLocal = new Date(w.date);
+      const winDateStr = `${winLocal.getFullYear()}-${String(winLocal.getMonth() + 1).padStart(2, '0')}-${String(winLocal.getDate()).padStart(2, '0')}`;
+      return winDateStr === date;
     });
   }, [wins]);
 
