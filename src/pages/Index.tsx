@@ -54,11 +54,11 @@ const Index = () => {
 
   if (submitted) {
     return (
-      <div className="flex min-h-screen items-center justify-center" style={backgroundStyle()}>
-        <div className="glass-card mx-4 w-full max-w-md p-8 text-center">
-          <div className="mb-4 text-6xl animate-float">✅</div>
-          <h2 className="mb-2 text-2xl font-bold text-foreground">Cadastro Realizado!</h2>
-          <p className="mb-6 text-muted-foreground">Seus dados foram registrados com sucesso. Boa sorte!</p>
+      <div className="flex min-h-[100dvh] items-center justify-center px-4" style={backgroundStyle()}>
+        <div className="glass-card w-full max-w-md p-6 text-center sm:p-8">
+          <div className="mb-4 text-5xl animate-float sm:text-6xl">✅</div>
+          <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Cadastro Realizado!</h2>
+          <p className="mb-6 text-sm text-muted-foreground sm:text-base">Seus dados foram registrados com sucesso. Boa sorte!</p>
           <Button
             onClick={() => { setSubmitted(false); setFormData({}); }}
             variant="outline"
@@ -72,23 +72,23 @@ const Index = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12" style={backgroundStyle()}>
-      <div className="mb-8 text-center">
-        <h1 className="mb-3 text-5xl font-bold text-foreground drop-shadow-lg md:text-6xl">
+    <div className="flex min-h-[100dvh] flex-col items-center justify-center px-4 py-8 sm:py-12" style={backgroundStyle()}>
+      <div className="mb-6 text-center sm:mb-8">
+        <h1 className="mb-2 text-3xl font-bold text-foreground drop-shadow-lg sm:mb-3 sm:text-5xl md:text-6xl">
           {config.heroTitle}
         </h1>
-        <p className="text-lg text-foreground/70 md:text-xl">{config.heroSubtitle}</p>
+        <p className="text-base text-foreground/70 sm:text-lg md:text-xl">{config.heroSubtitle}</p>
       </div>
 
-      <div className="glass-card w-full max-w-md p-8">
-        <h2 className="mb-6 text-center text-xl font-semibold text-foreground">
+      <div className="glass-card w-full max-w-md p-5 sm:p-8">
+        <h2 className="mb-4 text-center text-lg font-semibold text-foreground sm:mb-6 sm:text-xl">
           {config.formTitle}
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           {enabledFields.map(field => (
-            <div key={field.id} className="space-y-2">
-              <Label htmlFor={field.id} className="text-foreground/90">
+            <div key={field.id} className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor={field.id} className="text-sm text-foreground/90">
                 {field.label} {field.required && <span className="text-destructive">*</span>}
               </Label>
               <Input
@@ -97,14 +97,14 @@ const Index = () => {
                 placeholder={field.placeholder}
                 value={formData[field.id] || ''}
                 onChange={e => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
-                className="border-border/40 bg-secondary text-foreground placeholder:text-muted-foreground/60"
+                className="h-11 border-border/40 bg-secondary text-foreground placeholder:text-muted-foreground/60 sm:h-10"
               />
             </div>
           ))}
 
           <button
             type="submit"
-            className="w-full rounded-xl py-4 text-lg font-semibold transition-all hover:brightness-110 hover:scale-[1.01] active:scale-[0.99]"
+            className="w-full rounded-xl py-3.5 text-base font-semibold transition-all hover:brightness-110 active:scale-[0.99] sm:py-4 sm:text-lg"
             style={{ backgroundColor: config.submitButtonColor, color: config.submitButtonTextColor }}
           >
             Enviar
@@ -116,14 +116,13 @@ const Index = () => {
             href={config.ctaButtonLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-4 block w-full rounded-xl py-4 text-center font-bold transition-all hover:brightness-110 hover:scale-[1.02] active:scale-[0.98]"
+            className="mt-3 block w-full rounded-xl py-3.5 text-center font-bold transition-all hover:brightness-110 active:scale-[0.98] sm:mt-4 sm:py-4"
             style={{ backgroundColor: config.ctaButtonColor, color: config.ctaButtonTextColor }}
           >
             {config.ctaButtonText}
           </a>
         )}
       </div>
-
     </div>
   );
 };
