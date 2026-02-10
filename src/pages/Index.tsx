@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useConfig } from '@/hooks/useConfig';
 import { useSubmissions } from '@/hooks/useSubmissions';
+import { useBanned } from '@/hooks/useBanned';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +10,7 @@ import { toast } from 'sonner';
 const Index = () => {
   const { config } = useConfig();
   const { addSubmission } = useSubmissions();
+  const { isBanned } = useBanned();
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
 
@@ -35,6 +37,11 @@ const Index = () => {
 
     if (missing.length > 0) {
       toast.error('Preencha todos os campos obrigatórios');
+      return;
+    }
+
+    if (isBanned(formData)) {
+      toast.error('Seu cadastro foi bloqueado. Entre em contato com o administrador.');
       return;
     }
 
