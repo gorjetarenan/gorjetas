@@ -18,6 +18,8 @@ export interface PageConfig {
   maxDailyWins: number;
   maxWeeklyWins: number;
   maxMonthlyWins: number;
+  raffleRules: string;
+  raffleRulesEnabled: boolean;
 }
 
 export interface FormField {
@@ -66,4 +68,6 @@ export const defaultConfig: PageConfig = {
   maxDailyWins: 5,
   maxWeeklyWins: 20,
   maxMonthlyWins: 50,
+  raffleRules: '1. O sorteio é válido apenas para contas cadastradas.\n2. Cada participante pode ganhar no máximo uma vez por dia.\n3. O resultado é aleatório e irrevogável.\n4. Ao participar, você concorda com todas as regras.\n5. A administração se reserva o direito de desqualificar participantes que violem as regras.',
+  raffleRulesEnabled: true,
 };
