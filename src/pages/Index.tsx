@@ -5,6 +5,15 @@ import { useBanned } from '@/hooks/useBanned';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 
 const Index = () => {
@@ -13,6 +22,8 @@ const Index = () => {
   const { isBanned } = useBanned();
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [acceptedRules, setAcceptedRules] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
 
   const backgroundStyle = (): React.CSSProperties => {
     if (config.backgroundType === 'solid') {
@@ -40,6 +51,11 @@ const Index = () => {
       return;
     }
 
+    if (config.raffleRulesEnabled && !acceptedRules) {
+      toast.error('Você precisa aceitar as regras do sorteio');
+      return;
+    }
+
     if (isBanned(formData)) {
       toast.error('Seu cadastro foi bloqueado. Entre em contato com o administrador.');
       return;
@@ -60,7 +76,7 @@ const Index = () => {
           <h2 className="mb-2 text-xl font-bold text-foreground sm:text-2xl">Cadastro Realizado!</h2>
           <p className="mb-6 text-sm text-muted-foreground sm:text-base">Seus dados foram registrados com sucesso. Boa sorte!</p>
           <Button
-            onClick={() => { setSubmitted(false); setFormData({}); }}
+            onClick={() => { setSubmitted(false); setFormData({}); setAcceptedRules(false); }}
             variant="outline"
             className="w-full"
           >
@@ -102,6 +118,27 @@ const Index = () => {
             </div>
           ))}
 
+          {config.raffleRulesEnabled && (
+            <div className="flex items-start gap-2 pt-1">
+              <Checkbox
+                id="accept-rules"
+                checked={acceptedRules}
+                onCheckedChange={(v) => setAcceptedRules(v === true)}
+                className="mt-0.5"
+              />
+              <label htmlFor="accept-rules" className="text-sm text-foreground/80 leading-tight">
+                Li e aceito as{' '}
+                <button
+                  type="button"
+                  onClick={() => setRulesOpen(true)}
+                  className="text-primary underline underline-offset-2 hover:text-primary/80 font-medium"
+                >
+                  regras do sorteio
+                </button>
+              </label>
+            </div>
+          )}
+
           <button
             type="submit"
             className="w-full rounded-xl py-3.5 text-base font-semibold transition-all hover:brightness-110 active:scale-[0.99] sm:py-4 sm:text-lg"
@@ -123,6 +160,32 @@ const Index = () => {
           </a>
         )}
       </div>
+
+      {/* Rules Dialog */}
+      <Dialog open={rulesOpen} onOpenChange={setRulesOpen}>
+        <DialogContent className="max-w-lg max-h-[85dvh]">
+          <DialogHeader>
+            <DialogTitle className="text-lg">📜 Regras do Sorteio</DialogTitle>
+            <DialogDescription>
+              Leia atentamente antes de participar
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60dvh] pr-4">
+            <div className="whitespace-pre-line text-sm text-foreground/90 leading-relaxed">
+              {config.raffleRules}
+            </div>
+          </ScrollArea>
+          <Button
+            className="w-full mt-2"
+            onClick={() => {
+              setAcceptedRules(true);
+              setRulesOpen(false);
+            }}
+          >
+            Li e Aceito as Regras
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
