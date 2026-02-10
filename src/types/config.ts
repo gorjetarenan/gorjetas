@@ -11,6 +11,10 @@ export interface PageConfig {
   gradientDirection: string;
   backgroundImage: string;
   fields: FormField[];
+  submitButtonColor: string;
+  submitButtonTextColor: string;
+  ctaButtonColor: string;
+  ctaButtonTextColor: string;
   maxDailyWins: number;
   maxWeeklyWins: number;
   maxMonthlyWins: number;
@@ -55,6 +59,10 @@ export const defaultConfig: PageConfig = {
     { id: 'email', label: 'Email', placeholder: 'Digite seu email', type: 'email', required: true, enabled: true },
     { id: 'accountId', label: 'ID da Conta', placeholder: 'Digite o ID da sua conta', type: 'text', required: true, enabled: true },
   ],
+  submitButtonColor: '#16a34a',
+  submitButtonTextColor: '#ffffff',
+  ctaButtonColor: '#ca8a04',
+  ctaButtonTextColor: '#000000',
   maxDailyWins: 5,
   maxWeeklyWins: 20,
   maxMonthlyWins: 50,
