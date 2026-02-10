@@ -1,9 +1,12 @@
+import { useRef } from 'react';
 import { PageConfig } from '@/types/config';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Paintbrush } from 'lucide-react';
+import { Paintbrush, Upload, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Props {
   config: PageConfig;
@@ -11,6 +14,30 @@ interface Props {
 }
 
 const AdminAppearance = ({ config, onUpdate }: Props) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Por favor, selecione um arquivo de imagem');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('A imagem deve ter no máximo 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      onUpdate({ backgroundImage: dataUrl });
+      toast.success('Imagem carregada com sucesso!');
+    };
+    reader.readAsDataURL(file);
+  };
   return (
     <Card>
       <CardHeader>
@@ -101,16 +128,36 @@ const AdminAppearance = ({ config, onUpdate }: Props) => {
         )}
 
         {config.backgroundType === 'image' && (
-          <div className="space-y-2">
-            <Label>URL da Imagem</Label>
-            <Input
-              placeholder="https://exemplo.com/imagem.jpg"
-              value={config.backgroundImage}
-              onChange={e => onUpdate({ backgroundImage: e.target.value })}
+          <div className="space-y-4">
+            <Label>Imagem de Fundo</Label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
             />
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                {config.backgroundImage ? 'Trocar Imagem' : 'Enviar Imagem'}
+              </Button>
+              {config.backgroundImage && (
+                <Button
+                  variant="outline"
+                  onClick={() => onUpdate({ backgroundImage: '' })}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              )}
+            </div>
             {config.backgroundImage && (
               <div
-                className="mt-2 h-32 rounded-lg bg-cover bg-center border border-border/30"
+                className="h-40 rounded-lg bg-cover bg-center border border-border/30"
                 style={{ backgroundImage: `url(${config.backgroundImage})` }}
               />
             )}
