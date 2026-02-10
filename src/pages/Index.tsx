@@ -124,12 +124,6 @@ const Index = () => {
         )}
       </div>
 
-      <p className="mt-8 text-sm text-foreground/30">
-        Administrador?{' '}
-        <a href="/admin" className="text-primary underline hover:text-primary/80">
-          Acessar painel
-        </a>
-      </p>
     </div>
   );
 };
