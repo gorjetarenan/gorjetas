@@ -1,3 +1,4 @@
+// useSubmissions hook - manages submissions and raffle wins
 import { useState, useEffect, useCallback } from 'react';
 import { Submission, RaffleWin, PageConfig } from '@/types/config';
 
