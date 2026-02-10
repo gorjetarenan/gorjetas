@@ -41,6 +41,11 @@ export function useSubmissions() {
     return submission;
   }, []);
 
+  const clearSubmissions = useCallback(() => {
+    setSubmissions([]);
+    setWins([]);
+  }, []);
+
   const getWinsForSubmission = useCallback((submissionId: string, period: 'daily' | 'weekly' | 'monthly') => {
     const now = new Date();
     let startDate: Date;
@@ -112,6 +117,7 @@ export function useSubmissions() {
     submissions,
     wins,
     addSubmission,
+    clearSubmissions,
     canWin,
     drawRandom,
     drawSelected,

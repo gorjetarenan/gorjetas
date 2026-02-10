@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { PageConfig, Submission, RaffleWin } from '@/types/config';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,11 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Shuffle, Users, Trophy } from 'lucide-react';
+import { Shuffle, Users, Trophy, Trash2, Dices } from 'lucide-react';
 
 interface SubmissionsHook {
   submissions: Submission[];
   wins: RaffleWin[];
+  clearSubmissions: () => void;
   drawRandom: (count: number, config: PageConfig) => { winners: Submission[]; wins: RaffleWin[] };
   drawSelected: (ids: string[], config: PageConfig) => RaffleWin[];
   canWin: (id: string, config: PageConfig) => boolean;
@@ -23,10 +24,50 @@ interface Props {
   submissions: SubmissionsHook;
 }
 
+const CASINO_EMOJIS = ['🎰', '💰', '🃏', '🎲', '💎', '7️⃣', '🍒', '⭐', '🔔', '👑'];
+
 const AdminRaffle = ({ config, submissions: sub }: Props) => {
   const [randomCount, setRandomCount] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [lastResults, setLastResults] = useState<RaffleWin[]>([]);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [spinningNames, setSpinningNames] = useState<string[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
+  const spinIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (spinIntervalRef.current) clearInterval(spinIntervalRef.current);
+    };
+  }, []);
+
+  const startCasinoAnimation = (pendingWins: RaffleWin[]) => {
+    if (pendingWins.length === 0) return;
+
+    setIsSpinning(true);
+    setShowResults(false);
+    setLastResults(pendingWins);
+
+    let tick = 0;
+    const totalTicks = 30;
+    const allNames = sub.submissions.map(s => Object.values(s.data).join(' — '));
+
+    spinIntervalRef.current = setInterval(() => {
+      tick++;
+      const randomNames = Array.from({ length: Math.min(pendingWins.length, 5) }, () =>
+        allNames[Math.floor(Math.random() * allNames.length)]
+      );
+      setSpinningNames(randomNames);
+
+      if (tick >= totalTicks) {
+        if (spinIntervalRef.current) clearInterval(spinIntervalRef.current);
+        setIsSpinning(false);
+        setShowResults(true);
+        setSpinningNames([]);
+      }
+    }, 80 + tick * 3);
+  };
 
   const handleRandomDraw = () => {
     if (sub.submissions.length === 0) {
@@ -34,11 +75,10 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
       return;
     }
     const result = sub.drawRandom(randomCount, config);
-    setLastResults(result.wins);
     if (result.winners.length === 0) {
       toast.error('Nenhum participante elegível encontrado');
     } else {
-      toast.success(`${result.winners.length} ganhador(es) sorteado(s)!`);
+      startCasinoAnimation(result.wins);
     }
   };
 
@@ -48,13 +88,23 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
       return;
     }
     const results = sub.drawSelected(selectedIds, config);
-    setLastResults(results);
     setSelectedIds([]);
     if (results.length === 0) {
       toast.error('Nenhum participante selecionado é elegível');
     } else {
-      toast.success(`${results.length} ganhador(es) confirmado(s)!`);
+      startCasinoAnimation(results);
     }
+  };
+
+  const handleClearSubmissions = () => {
+    if (!confirmClear) {
+      setConfirmClear(true);
+      return;
+    }
+    sub.clearSubmissions();
+    setLastResults([]);
+    setConfirmClear(false);
+    toast.success('Todos os cadastros foram zerados!');
   };
 
   const toggleSelect = (id: string) => {
@@ -65,6 +115,69 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
 
   return (
     <div className="space-y-6">
+      {/* Cadastrados Container */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" /> Cadastrados ({sub.submissions.length})
+          </CardTitle>
+          <div className="flex gap-2">
+            {confirmClear ? (
+              <>
+                <Button variant="destructive" size="sm" onClick={handleClearSubmissions}>
+                  Confirmar Exclusão
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setConfirmClear(false)}>
+                  Cancelar
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearSubmissions}
+                disabled={sub.submissions.length === 0}
+              >
+                <Trash2 className="mr-1 h-4 w-4 text-destructive" /> Zerar Cadastros
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {sub.submissions.length === 0 ? (
+            <p className="text-center text-sm text-muted-foreground py-8">Nenhum cadastro registrado ainda.</p>
+          ) : (
+            <div className="max-h-72 overflow-y-auto rounded-lg border border-border/50">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-secondary">
+                  <tr>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">#</th>
+                    {sub.submissions[0] && Object.keys(sub.submissions[0].data).map(key => (
+                      <th key={key} className="px-3 py-2 text-left text-xs font-medium text-muted-foreground capitalize">{key}</th>
+                    ))}
+                    <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Data</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sub.submissions.map((s, i) => (
+                    <tr key={s.id} className="border-t border-border/30 transition-colors hover:bg-muted/30">
+                      <td className="px-3 py-2 text-muted-foreground">{i + 1}</td>
+                      {Object.values(s.data).map((val, vi) => (
+                        <td key={vi} className="px-3 py-2 text-foreground">{val}</td>
+                      ))}
+                      <td className="px-3 py-2 text-muted-foreground text-xs">
+                        {new Date(s.createdAt).toLocaleDateString('pt-BR')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Sorteio */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -73,7 +186,7 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
         </CardHeader>
         <CardContent>
           <p className="mb-4 text-sm text-muted-foreground">
-            Total de cadastros: <strong className="text-foreground">{sub.submissions.length}</strong> | Sorteios realizados: <strong className="text-foreground">{sub.wins.length}</strong>
+            Sorteios realizados: <strong className="text-foreground">{sub.wins.length}</strong>
           </p>
 
           <Tabs defaultValue="random">
@@ -99,8 +212,8 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
                     className="w-32"
                   />
                 </div>
-                <Button onClick={handleRandomDraw}>
-                  <Shuffle className="mr-2 h-4 w-4" /> Sortear
+                <Button onClick={handleRandomDraw} disabled={isSpinning}>
+                  <Dices className="mr-2 h-4 w-4" /> {isSpinning ? 'Sorteando...' : 'Sortear'}
                 </Button>
               </div>
             </TabsContent>
@@ -133,7 +246,7 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
                       );
                     })}
                   </div>
-                  <Button onClick={handleManualDraw} disabled={selectedIds.length === 0}>
+                  <Button onClick={handleManualDraw} disabled={selectedIds.length === 0 || isSpinning}>
                     <Trophy className="mr-2 h-4 w-4" /> Confirmar ({selectedIds.length})
                   </Button>
                 </>
@@ -143,21 +256,74 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
         </CardContent>
       </Card>
 
-      {lastResults.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">🎉 Último Resultado</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
+      {/* Casino Animation */}
+      {isSpinning && (
+        <Card className="overflow-hidden border-accent/50">
+          <CardContent className="py-8">
+            <div className="flex flex-col items-center gap-4">
+              <div className="flex gap-3 text-4xl animate-bounce">
+                {CASINO_EMOJIS.slice(0, 5).map((emoji, i) => (
+                  <span
+                    key={i}
+                    className="inline-block"
+                    style={{
+                      animation: `spin 0.3s linear infinite`,
+                      animationDelay: `${i * 0.1}s`,
+                    }}
+                  >
+                    {emoji}
+                  </span>
+                ))}
+              </div>
+
+              <div className="relative w-full max-w-md overflow-hidden rounded-xl border-2 border-accent/40 bg-secondary/80 p-4">
+                <div className="absolute inset-0 bg-gradient-to-r from-accent/5 via-accent/10 to-accent/5 animate-pulse" />
+                <div className="relative space-y-2">
+                  {spinningNames.map((name, i) => (
+                    <div
+                      key={i}
+                      className="rounded-lg bg-muted/60 px-4 py-2 text-center font-mono text-sm text-accent transition-all"
+                    >
+                      {name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <p className="text-sm font-medium text-accent animate-pulse">🎰 Sorteando...</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Results */}
+      {showResults && lastResults.length > 0 && (
+        <Card className="border-accent/30 animate-scale-in">
+          <CardContent className="py-6">
+            <div className="mb-6 text-center">
+              <div className="mb-2 text-5xl">🎉🏆🎉</div>
+              <h3 className="text-2xl font-bold text-accent">
+                {lastResults.length === 1 ? 'Ganhador!' : 'Ganhadores!'}
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">Parabéns aos sorteados!</p>
+            </div>
+
+            <div className="space-y-3 max-w-lg mx-auto">
               {lastResults.map((w, i) => (
-                <div key={w.id} className="flex items-center gap-3 rounded-lg bg-accent/10 p-3">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-sm font-bold text-accent-foreground">
+                <div
+                  key={w.id}
+                  className="flex items-center gap-4 rounded-xl border border-accent/20 bg-accent/5 p-4 animate-fade-in"
+                  style={{ animationDelay: `${i * 0.15}s`, animationFillMode: 'backwards' }}
+                >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-lg font-bold text-accent-foreground shadow-lg">
                     {i + 1}
                   </span>
-                  <span className="text-sm text-foreground">
-                    {Object.values(w.submissionData).join(' — ')}
-                  </span>
+                  <div className="flex-1">
+                    <span className="text-base font-semibold text-foreground">
+                      {Object.values(w.submissionData).join(' — ')}
+                    </span>
+                  </div>
+                  <span className="text-2xl">{CASINO_EMOJIS[i % CASINO_EMOJIS.length]}</span>
                 </div>
               ))}
             </div>
