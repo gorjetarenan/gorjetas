@@ -102,12 +102,13 @@ const Index = () => {
             </div>
           ))}
 
-          <Button
+          <button
             type="submit"
-            className="w-full py-6 text-lg font-semibold animate-pulse-glow"
+            className="w-full rounded-xl py-4 text-lg font-semibold transition-all hover:brightness-110 hover:scale-[1.01] active:scale-[0.99]"
+            style={{ backgroundColor: config.submitButtonColor, color: config.submitButtonTextColor }}
           >
             Enviar
-          </Button>
+          </button>
         </form>
 
         {config.ctaButtonLink && (
@@ -115,7 +116,8 @@ const Index = () => {
             href={config.ctaButtonLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-4 block w-full rounded-xl bg-accent py-4 text-center font-bold text-accent-foreground transition-all hover:brightness-110 hover:scale-[1.02] active:scale-[0.98]"
+            className="mt-4 block w-full rounded-xl py-4 text-center font-bold transition-all hover:brightness-110 hover:scale-[1.02] active:scale-[0.98]"
+            style={{ backgroundColor: config.ctaButtonColor, color: config.ctaButtonTextColor }}
           >
             {config.ctaButtonText}
           </a>

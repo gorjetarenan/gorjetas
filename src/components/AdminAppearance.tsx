@@ -163,6 +163,52 @@ const AdminAppearance = ({ config, onUpdate }: Props) => {
             )}
           </div>
         )}
+
+        {/* Button Colors */}
+        <div className="border-t border-border/30 pt-6 space-y-4">
+          <p className="text-sm font-semibold text-foreground">Cores dos Botões</p>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-xs">Botão Enviar — Fundo</Label>
+              <div className="flex items-center gap-3">
+                <input type="color" value={config.submitButtonColor} onChange={e => onUpdate({ submitButtonColor: e.target.value })} className="h-10 w-16 cursor-pointer rounded border-0 bg-transparent" />
+                <Input value={config.submitButtonColor} onChange={e => onUpdate({ submitButtonColor: e.target.value })} className="flex-1" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Botão Enviar — Texto</Label>
+              <div className="flex items-center gap-3">
+                <input type="color" value={config.submitButtonTextColor} onChange={e => onUpdate({ submitButtonTextColor: e.target.value })} className="h-10 w-16 cursor-pointer rounded border-0 bg-transparent" />
+                <Input value={config.submitButtonTextColor} onChange={e => onUpdate({ submitButtonTextColor: e.target.value })} className="flex-1" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Botão CTA — Fundo</Label>
+              <div className="flex items-center gap-3">
+                <input type="color" value={config.ctaButtonColor} onChange={e => onUpdate({ ctaButtonColor: e.target.value })} className="h-10 w-16 cursor-pointer rounded border-0 bg-transparent" />
+                <Input value={config.ctaButtonColor} onChange={e => onUpdate({ ctaButtonColor: e.target.value })} className="flex-1" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Botão CTA — Texto</Label>
+              <div className="flex items-center gap-3">
+                <input type="color" value={config.ctaButtonTextColor} onChange={e => onUpdate({ ctaButtonTextColor: e.target.value })} className="h-10 w-16 cursor-pointer rounded border-0 bg-transparent" />
+                <Input value={config.ctaButtonTextColor} onChange={e => onUpdate({ ctaButtonTextColor: e.target.value })} className="flex-1" />
+              </div>
+            </div>
+          </div>
+
+          {/* Preview */}
+          <div className="flex gap-3 mt-2">
+            <button className="flex-1 rounded-xl py-3 font-semibold text-sm" style={{ backgroundColor: config.submitButtonColor, color: config.submitButtonTextColor }}>
+              Enviar (Preview)
+            </button>
+            <button className="flex-1 rounded-xl py-3 font-bold text-sm" style={{ backgroundColor: config.ctaButtonColor, color: config.ctaButtonTextColor }}>
+              CTA (Preview)
+            </button>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
