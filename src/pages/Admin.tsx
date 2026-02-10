@@ -12,6 +12,7 @@ import AdminBanned from '@/components/AdminBanned';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const Admin = () => {
   const { config, updateConfig, resetConfig } = useConfig();
@@ -19,32 +20,35 @@ const Admin = () => {
   const { banned, addBan, removeBan } = useBanned();
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
+    <div className="min-h-screen bg-background p-3 pb-8 md:p-8">
       <div className="mx-auto max-w-5xl">
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="mb-4 flex items-center justify-between md:mb-6">
+          <div className="flex items-center gap-2 md:gap-3">
             <Link to="/">
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="h-9 w-9">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <h1 className="text-2xl font-bold text-foreground">Painel Administrativo</h1>
+            <h1 className="text-lg font-bold text-foreground md:text-2xl">Painel Administrativo</h1>
           </div>
-          <Button variant="outline" size="sm" onClick={resetConfig}>
-            <RotateCcw className="mr-2 h-4 w-4" /> Resetar
+          <Button variant="outline" size="sm" onClick={resetConfig} className="text-xs md:text-sm">
+            <RotateCcw className="mr-1 h-3.5 w-3.5 md:mr-2 md:h-4 md:w-4" /> Resetar
           </Button>
         </div>
 
         <Tabs defaultValue="appearance" className="w-full">
-          <TabsList className="mb-6 flex w-full flex-wrap gap-1">
-            <TabsTrigger value="appearance">Aparência</TabsTrigger>
-            <TabsTrigger value="fields">Campos</TabsTrigger>
-            <TabsTrigger value="texts">Textos</TabsTrigger>
-            <TabsTrigger value="raffle">Sorteio</TabsTrigger>
-            <TabsTrigger value="rules">Regras</TabsTrigger>
-            <TabsTrigger value="banned">Banidos</TabsTrigger>
-            <TabsTrigger value="export">Exportar</TabsTrigger>
-          </TabsList>
+          <ScrollArea className="w-full mb-4 md:mb-6">
+            <TabsList className="inline-flex w-max gap-1 p-1">
+              <TabsTrigger value="appearance" className="text-xs md:text-sm px-3">Aparência</TabsTrigger>
+              <TabsTrigger value="fields" className="text-xs md:text-sm px-3">Campos</TabsTrigger>
+              <TabsTrigger value="texts" className="text-xs md:text-sm px-3">Textos</TabsTrigger>
+              <TabsTrigger value="raffle" className="text-xs md:text-sm px-3">Sorteio</TabsTrigger>
+              <TabsTrigger value="rules" className="text-xs md:text-sm px-3">Regras</TabsTrigger>
+              <TabsTrigger value="banned" className="text-xs md:text-sm px-3">Banidos</TabsTrigger>
+              <TabsTrigger value="export" className="text-xs md:text-sm px-3">Exportar</TabsTrigger>
+            </TabsList>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
 
           <TabsContent value="appearance">
             <AdminAppearance config={config} onUpdate={updateConfig} />
