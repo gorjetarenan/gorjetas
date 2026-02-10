@@ -10,12 +10,14 @@ import AdminRules from '@/components/AdminRules';
 import AdminExport from '@/components/AdminExport';
 import AdminBanned from '@/components/AdminBanned';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, RotateCcw } from 'lucide-react';
+import { ArrowLeft, RotateCcw, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const Admin = () => {
   const { config, updateConfig, resetConfig } = useConfig();
+  const { signOut } = useAuth();
   const submissionsHook = useSubmissions();
   const { banned, addBan, removeBan } = useBanned();
 
@@ -31,9 +33,14 @@ const Admin = () => {
             </Link>
             <h1 className="text-lg font-bold text-foreground md:text-2xl">Painel Administrativo</h1>
           </div>
-          <Button variant="outline" size="sm" onClick={resetConfig} className="text-xs md:text-sm">
-            <RotateCcw className="mr-1 h-3.5 w-3.5 md:mr-2 md:h-4 md:w-4" /> Resetar
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={resetConfig} className="text-xs md:text-sm">
+              <RotateCcw className="mr-1 h-3.5 w-3.5 md:mr-2 md:h-4 md:w-4" /> Resetar
+            </Button>
+            <Button variant="ghost" size="sm" onClick={signOut} className="text-xs md:text-sm text-destructive">
+              <LogOut className="mr-1 h-3.5 w-3.5 md:mr-2 md:h-4 md:w-4" /> Sair
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="appearance" className="w-full">
