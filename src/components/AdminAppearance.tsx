@@ -1,12 +1,13 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { PageConfig } from '@/types/config';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Paintbrush, Upload, Trash2 } from 'lucide-react';
+import { Paintbrush, Upload, Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
   config: PageConfig;
@@ -15,8 +16,9 @@ interface Props {
 
 const AdminAppearance = ({ config, onUpdate }: Props) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -30,14 +32,30 @@ const AdminAppearance = ({ config, onUpdate }: Props) => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      onUpdate({ backgroundImage: dataUrl });
+    setUploading(true);
+    try {
+      const fileName = `bg-${Date.now()}.${file.name.split('.').pop()}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('backgrounds')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('backgrounds')
+        .getPublicUrl(fileName);
+
+      onUpdate({ backgroundImage: urlData.publicUrl });
       toast.success('Imagem carregada com sucesso!');
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Upload error:', err);
+      toast.error('Erro ao enviar imagem. Tente novamente.');
+    } finally {
+      setUploading(false);
+    }
   };
+
   return (
     <Card>
       <CardHeader>
@@ -65,17 +83,8 @@ const AdminAppearance = ({ config, onUpdate }: Props) => {
           <div className="space-y-2">
             <Label>Cor de Fundo</Label>
             <div className="flex items-center gap-3">
-              <input
-                type="color"
-                value={config.backgroundColor}
-                onChange={e => onUpdate({ backgroundColor: e.target.value })}
-                className="h-10 w-16 cursor-pointer rounded border-0 bg-transparent"
-              />
-              <Input
-                value={config.backgroundColor}
-                onChange={e => onUpdate({ backgroundColor: e.target.value })}
-                className="flex-1"
-              />
+              <input type="color" value={config.backgroundColor} onChange={e => onUpdate({ backgroundColor: e.target.value })} className="h-10 w-16 cursor-pointer rounded border-0 bg-transparent" />
+              <Input value={config.backgroundColor} onChange={e => onUpdate({ backgroundColor: e.target.value })} className="flex-1" />
             </div>
           </div>
         )}
@@ -85,43 +94,22 @@ const AdminAppearance = ({ config, onUpdate }: Props) => {
             <div className="space-y-2">
               <Label>Cor Inicial</Label>
               <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={config.gradientFrom}
-                  onChange={e => onUpdate({ gradientFrom: e.target.value })}
-                  className="h-10 w-16 cursor-pointer rounded border-0 bg-transparent"
-                />
+                <input type="color" value={config.gradientFrom} onChange={e => onUpdate({ gradientFrom: e.target.value })} className="h-10 w-16 cursor-pointer rounded border-0 bg-transparent" />
                 <Input value={config.gradientFrom} onChange={e => onUpdate({ gradientFrom: e.target.value })} className="flex-1" />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Cor Final</Label>
               <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={config.gradientTo}
-                  onChange={e => onUpdate({ gradientTo: e.target.value })}
-                  className="h-10 w-16 cursor-pointer rounded border-0 bg-transparent"
-                />
+                <input type="color" value={config.gradientTo} onChange={e => onUpdate({ gradientTo: e.target.value })} className="h-10 w-16 cursor-pointer rounded border-0 bg-transparent" />
                 <Input value={config.gradientTo} onChange={e => onUpdate({ gradientTo: e.target.value })} className="flex-1" />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Direção (graus)</Label>
-              <Input
-                type="number"
-                min="0"
-                max="360"
-                value={config.gradientDirection}
-                onChange={e => onUpdate({ gradientDirection: e.target.value })}
-              />
+              <Input type="number" min="0" max="360" value={config.gradientDirection} onChange={e => onUpdate({ gradientDirection: e.target.value })} />
             </div>
-            <div
-              className="mt-4 h-20 rounded-lg"
-              style={{
-                background: `linear-gradient(${config.gradientDirection}deg, ${config.gradientFrom}, ${config.gradientTo})`,
-              }}
-            >
+            <div className="mt-4 h-20 rounded-lg" style={{ background: `linear-gradient(${config.gradientDirection}deg, ${config.gradientFrom}, ${config.gradientTo})` }}>
               <p className="flex h-full items-center justify-center text-sm text-foreground/50">Preview</p>
             </div>
           </>
@@ -130,36 +118,20 @@ const AdminAppearance = ({ config, onUpdate }: Props) => {
         {config.backgroundType === 'image' && (
           <div className="space-y-4">
             <Label>Imagem de Fundo</Label>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
             <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                {config.backgroundImage ? 'Trocar Imagem' : 'Enviar Imagem'}
+              <Button variant="outline" className="flex-1" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                {uploading ? 'Enviando...' : config.backgroundImage ? 'Trocar Imagem' : 'Enviar Imagem'}
               </Button>
               {config.backgroundImage && (
-                <Button
-                  variant="outline"
-                  onClick={() => onUpdate({ backgroundImage: '' })}
-                >
+                <Button variant="outline" onClick={() => onUpdate({ backgroundImage: '' })}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               )}
             </div>
             {config.backgroundImage && (
-              <div
-                className="h-40 rounded-lg bg-cover bg-center border border-border/30"
-                style={{ backgroundImage: `url(${config.backgroundImage})` }}
-              />
+              <div className="h-40 rounded-lg bg-cover bg-center border border-border/30" style={{ backgroundImage: `url(${config.backgroundImage})` }} />
             )}
           </div>
         )}
@@ -167,7 +139,6 @@ const AdminAppearance = ({ config, onUpdate }: Props) => {
         {/* Button Colors */}
         <div className="border-t border-border/30 pt-6 space-y-4">
           <p className="text-sm font-semibold text-foreground">Cores dos Botões</p>
-
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label className="text-xs">Botão Enviar — Fundo</Label>
@@ -198,8 +169,6 @@ const AdminAppearance = ({ config, onUpdate }: Props) => {
               </div>
             </div>
           </div>
-
-          {/* Preview */}
           <div className="flex gap-3 mt-2">
             <button className="flex-1 rounded-xl py-3 font-semibold text-sm" style={{ backgroundColor: config.submitButtonColor, color: config.submitButtonTextColor }}>
               Enviar (Preview)
