@@ -112,11 +112,22 @@ export function useSubmissions() {
     return results;
   }, [submissions, canWin, addWin]);
 
+  const updateSubmission = useCallback((id: string, data: Record<string, string>) => {
+    setSubmissions(prev => prev.map(s => s.id === id ? { ...s, data } : s));
+  }, []);
+
+  const removeSubmission = useCallback((id: string) => {
+    setSubmissions(prev => prev.filter(s => s.id !== id));
+    setWins(prev => prev.filter(w => w.submissionId !== id));
+  }, []);
+
   return {
     submissions,
     wins,
     addSubmission,
     clearSubmissions,
+    updateSubmission,
+    removeSubmission,
     canWin,
     drawRandom,
     drawSelected,

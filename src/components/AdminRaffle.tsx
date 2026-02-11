@@ -7,12 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Shuffle, Users, Trophy, Trash2, Dices } from 'lucide-react';
+import { Shuffle, Users, Trophy, Trash2, Dices, Pencil, X, Check } from 'lucide-react';
 
 interface SubmissionsHook {
   submissions: Submission[];
   wins: RaffleWin[];
   clearSubmissions: () => void;
+  updateSubmission: (id: string, data: Record<string, string>) => void;
+  removeSubmission: (id: string) => void;
   drawRandom: (count: number, config: PageConfig) => { winners: Submission[]; wins: RaffleWin[] };
   drawSelected: (ids: string[], config: PageConfig) => RaffleWin[];
   canWin: (id: string, config: PageConfig) => boolean;
@@ -34,6 +36,9 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
   const [spinningNames, setSpinningNames] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editData, setEditData] = useState<Record<string, string>>({});
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const spinIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -150,29 +155,72 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
             <div className="max-h-72 overflow-y-auto rounded-lg border border-border/50">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-secondary">
-                  <tr>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">#</th>
-                    {sub.submissions[0] && Object.keys(sub.submissions[0].data).map(key => (
-                      <th key={key} className="px-3 py-2 text-left text-xs font-medium text-muted-foreground capitalize">{key}</th>
-                    ))}
-                    <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Data</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sub.submissions.map((s, i) => (
-                    <tr key={s.id} className="border-t border-border/30 transition-colors hover:bg-muted/30">
-                      <td className="px-3 py-2 text-muted-foreground">{i + 1}</td>
-                      {Object.values(s.data).map((val, vi) => (
-                        <td key={vi} className="px-3 py-2 text-foreground">{val}</td>
-                      ))}
-                      <td className="px-3 py-2 text-muted-foreground text-xs">
-                        {new Date(s.createdAt).toLocaleDateString('pt-BR')}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                   <tr>
+                     <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">#</th>
+                     {sub.submissions[0] && Object.keys(sub.submissions[0].data).map(key => (
+                       <th key={key} className="px-3 py-2 text-left text-xs font-medium text-muted-foreground capitalize">{key}</th>
+                     ))}
+                     <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Data</th>
+                     <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">Ações</th>
+                   </tr>
+                 </thead>
+                 <tbody>
+                   {sub.submissions.map((s, i) => (
+                     <tr key={s.id} className="border-t border-border/30 transition-colors hover:bg-muted/30">
+                       <td className="px-3 py-2 text-muted-foreground">{i + 1}</td>
+                       {editingId === s.id ? (
+                         Object.entries(s.data).map(([key]) => (
+                           <td key={key} className="px-3 py-2">
+                             <Input
+                               value={editData[key] || ''}
+                               onChange={e => setEditData(prev => ({ ...prev, [key]: e.target.value }))}
+                               className="h-7 text-xs"
+                             />
+                           </td>
+                         ))
+                       ) : (
+                         Object.values(s.data).map((val, vi) => (
+                           <td key={vi} className="px-3 py-2 text-foreground">{val}</td>
+                         ))
+                       )}
+                       <td className="px-3 py-2 text-muted-foreground text-xs">
+                         {new Date(s.createdAt).toLocaleDateString('pt-BR')}
+                       </td>
+                       <td className="px-3 py-2 text-right">
+                         {editingId === s.id ? (
+                           <div className="flex justify-end gap-1">
+                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { sub.updateSubmission(s.id, editData); setEditingId(null); toast.success('Cadastro atualizado'); }}>
+                               <Check className="h-3.5 w-3.5 text-green-500" />
+                             </Button>
+                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingId(null)}>
+                               <X className="h-3.5 w-3.5 text-muted-foreground" />
+                             </Button>
+                           </div>
+                         ) : confirmDeleteId === s.id ? (
+                           <div className="flex justify-end gap-1">
+                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { sub.removeSubmission(s.id); setConfirmDeleteId(null); toast.success('Cadastro removido'); }}>
+                               <Check className="h-3.5 w-3.5 text-destructive" />
+                             </Button>
+                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConfirmDeleteId(null)}>
+                               <X className="h-3.5 w-3.5 text-muted-foreground" />
+                             </Button>
+                           </div>
+                         ) : (
+                           <div className="flex justify-end gap-1">
+                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingId(s.id); setEditData({ ...s.data }); }}>
+                               <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                             </Button>
+                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConfirmDeleteId(s.id)}>
+                               <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                             </Button>
+                           </div>
+                         )}
+                       </td>
+                     </tr>
+                   ))}
+                 </tbody>
+               </table>
+             </div>
           )}
         </CardContent>
       </Card>
