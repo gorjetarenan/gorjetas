@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Shuffle, Users, Trophy, Trash2, Dices, Pencil, X, Check } from 'lucide-react';
+import { Shuffle, Users, Trophy, Trash2, Dices, Pencil, X, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface SubmissionsHook {
   submissions: Submission[];
@@ -30,6 +30,8 @@ const CASINO_EMOJIS = ['🎰', '💰', '🃏', '🎲', '💎', '7️⃣', '🍒'
 
 const AdminRaffle = ({ config, submissions: sub }: Props) => {
   const [randomCount, setRandomCount] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [lastResults, setLastResults] = useState<RaffleWin[]>([]);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -152,9 +154,10 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
           {sub.submissions.length === 0 ? (
             <p className="text-center text-sm text-muted-foreground py-8">Nenhum cadastro registrado ainda.</p>
           ) : (
-            <div className="max-h-72 overflow-y-auto rounded-lg border border-border/50">
-              <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-secondary">
+             <>
+             <div className="rounded-lg border border-border/50">
+               <table className="w-full text-sm">
+                 <thead className="bg-secondary">
                    <tr>
                      <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">#</th>
                      {sub.submissions[0] && Object.keys(sub.submissions[0].data).map(key => (
@@ -165,65 +168,104 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
                    </tr>
                  </thead>
                  <tbody>
-                   {sub.submissions.map((s, i) => (
-                     <tr key={s.id} className="border-t border-border/30 transition-colors hover:bg-muted/30">
-                       <td className="px-3 py-2 text-muted-foreground">{i + 1}</td>
-                       {editingId === s.id ? (
-                         Object.entries(s.data).map(([key]) => (
-                           <td key={key} className="px-3 py-2">
-                             <Input
-                               value={editData[key] || ''}
-                               onChange={e => setEditData(prev => ({ ...prev, [key]: e.target.value }))}
-                               className="h-7 text-xs"
-                             />
-                           </td>
-                         ))
-                       ) : (
-                         Object.values(s.data).map((val, vi) => (
-                           <td key={vi} className="px-3 py-2 text-foreground">{val}</td>
-                         ))
-                       )}
-                       <td className="px-3 py-2 text-muted-foreground text-xs">
-                         {new Date(s.createdAt).toLocaleDateString('pt-BR')}
-                       </td>
-                       <td className="px-3 py-2 text-right">
+                   {(() => {
+                     const totalPages = Math.ceil(sub.submissions.length / itemsPerPage);
+                     const safePage = Math.min(currentPage, totalPages || 1);
+                     const start = (safePage - 1) * itemsPerPage;
+                     const paged = sub.submissions.slice(start, start + itemsPerPage);
+                     return paged.map((s, i) => (
+                       <tr key={s.id} className="border-t border-border/30 transition-colors hover:bg-muted/30">
+                         <td className="px-3 py-2 text-muted-foreground">{start + i + 1}</td>
                          {editingId === s.id ? (
-                           <div className="flex justify-end gap-1">
-                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { sub.updateSubmission(s.id, editData); setEditingId(null); toast.success('Cadastro atualizado'); }}>
-                               <Check className="h-3.5 w-3.5 text-green-500" />
-                             </Button>
-                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingId(null)}>
-                               <X className="h-3.5 w-3.5 text-muted-foreground" />
-                             </Button>
-                           </div>
-                         ) : confirmDeleteId === s.id ? (
-                           <div className="flex justify-end gap-1">
-                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { sub.removeSubmission(s.id); setConfirmDeleteId(null); toast.success('Cadastro removido'); }}>
-                               <Check className="h-3.5 w-3.5 text-destructive" />
-                             </Button>
-                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConfirmDeleteId(null)}>
-                               <X className="h-3.5 w-3.5 text-muted-foreground" />
-                             </Button>
-                           </div>
+                           Object.entries(s.data).map(([key]) => (
+                             <td key={key} className="px-3 py-2">
+                               <Input
+                                 value={editData[key] || ''}
+                                 onChange={e => setEditData(prev => ({ ...prev, [key]: e.target.value }))}
+                                 className="h-7 text-xs"
+                               />
+                             </td>
+                           ))
                          ) : (
-                           <div className="flex justify-end gap-1">
-                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingId(s.id); setEditData({ ...s.data }); }}>
-                               <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                             </Button>
-                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConfirmDeleteId(s.id)}>
-                               <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                             </Button>
-                           </div>
+                           Object.values(s.data).map((val, vi) => (
+                             <td key={vi} className="px-3 py-2 text-foreground">{val}</td>
+                           ))
                          )}
-                       </td>
-                     </tr>
-                   ))}
+                         <td className="px-3 py-2 text-muted-foreground text-xs">
+                           {new Date(s.createdAt).toLocaleDateString('pt-BR')}
+                         </td>
+                         <td className="px-3 py-2 text-right">
+                           {editingId === s.id ? (
+                             <div className="flex justify-end gap-1">
+                               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { sub.updateSubmission(s.id, editData); setEditingId(null); toast.success('Cadastro atualizado'); }}>
+                                 <Check className="h-3.5 w-3.5 text-green-500" />
+                               </Button>
+                               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingId(null)}>
+                                 <X className="h-3.5 w-3.5 text-muted-foreground" />
+                               </Button>
+                             </div>
+                           ) : confirmDeleteId === s.id ? (
+                             <div className="flex justify-end gap-1">
+                               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { sub.removeSubmission(s.id); setConfirmDeleteId(null); toast.success('Cadastro removido'); }}>
+                                 <Check className="h-3.5 w-3.5 text-destructive" />
+                               </Button>
+                               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConfirmDeleteId(null)}>
+                                 <X className="h-3.5 w-3.5 text-muted-foreground" />
+                               </Button>
+                             </div>
+                           ) : (
+                             <div className="flex justify-end gap-1">
+                               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingId(s.id); setEditData({ ...s.data }); }}>
+                                 <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                               </Button>
+                               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConfirmDeleteId(s.id)}>
+                                 <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                               </Button>
+                             </div>
+                           )}
+                         </td>
+                       </tr>
+                     ));
+                   })()}
                  </tbody>
                </table>
              </div>
-          )}
-        </CardContent>
-      </Card>
+
+             {/* Pagination */}
+             {sub.submissions.length > itemsPerPage && (() => {
+               const totalPages = Math.ceil(sub.submissions.length / itemsPerPage);
+               return (
+                 <div className="flex items-center justify-between pt-3">
+                   <p className="text-xs text-muted-foreground">
+                     Página {Math.min(currentPage, totalPages)} de {totalPages}
+                   </p>
+                   <div className="flex items-center gap-1">
+                     <Button
+                       variant="outline"
+                       size="icon"
+                       className="h-8 w-8"
+                       disabled={currentPage <= 1}
+                       onClick={() => setCurrentPage(p => p - 1)}
+                     >
+                       <ChevronLeft className="h-4 w-4" />
+                     </Button>
+                     <Button
+                       variant="outline"
+                       size="icon"
+                       className="h-8 w-8"
+                       disabled={currentPage >= totalPages}
+                       onClick={() => setCurrentPage(p => p + 1)}
+                     >
+                       <ChevronRight className="h-4 w-4" />
+                     </Button>
+                   </div>
+                 </div>
+               );
+             })()}
+             </>
+           )}
+         </CardContent>
+       </Card>
 
       {/* Sorteio */}
       <Card>
