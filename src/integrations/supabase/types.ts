@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      banned_entries: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          type: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason?: string
+          type: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          type?: string
+          value?: string
+        }
+        Relationships: []
+      }
       page_config: {
         Row: {
           config: Json
