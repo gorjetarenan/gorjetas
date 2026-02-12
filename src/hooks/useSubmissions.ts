@@ -1,48 +1,64 @@
-// useSubmissions hook - manages submissions and raffle wins
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Submission, RaffleWin, PageConfig } from '@/types/config';
 
-const SUBMISSIONS_KEY = 'gorjetas-submissions';
-const WINS_KEY = 'gorjetas-wins';
-
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
-}
-
 export function useSubmissions() {
-  const [submissions, setSubmissions] = useState<Submission[]>(() => {
-    try {
-      const stored = localStorage.getItem(SUBMISSIONS_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch { return []; }
-  });
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [wins, setWins] = useState<RaffleWin[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [wins, setWins] = useState<RaffleWin[]>(() => {
-    try {
-      const stored = localStorage.getItem(WINS_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch { return []; }
-  });
+  const fetchSubmissions = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('submissions')
+      .select('*')
+      .order('created_at', { ascending: true });
+    if (!error && data) {
+      setSubmissions(data.map(row => ({
+        id: row.id,
+        data: (row.data as Record<string, string>) || {},
+        createdAt: row.created_at,
+      })));
+    }
+  }, []);
+
+  const fetchWins = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('raffle_wins')
+      .select('*')
+      .order('date', { ascending: true });
+    if (!error && data) {
+      setWins(data.map(row => ({
+        id: row.id,
+        submissionId: row.submission_id,
+        submissionData: (row.submission_data as Record<string, string>) || {},
+        date: row.date,
+      })));
+    }
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(submissions));
-  }, [submissions]);
+    Promise.all([fetchSubmissions(), fetchWins()]).finally(() => setLoading(false));
+  }, [fetchSubmissions, fetchWins]);
 
-  useEffect(() => {
-    localStorage.setItem(WINS_KEY, JSON.stringify(wins));
-  }, [wins]);
-
-  const addSubmission = useCallback((data: Record<string, string>) => {
+  const addSubmission = useCallback(async (data: Record<string, string>) => {
+    const { data: rows, error } = await supabase
+      .from('submissions')
+      .insert({ data })
+      .select()
+      .single();
+    if (error) throw error;
     const submission: Submission = {
-      id: generateId(),
-      data,
-      createdAt: new Date().toISOString(),
+      id: rows.id,
+      data: (rows.data as Record<string, string>) || {},
+      createdAt: rows.created_at,
     };
     setSubmissions(prev => [...prev, submission]);
     return submission;
   }, []);
 
-  const clearSubmissions = useCallback(() => {
+  const clearSubmissions = useCallback(async () => {
+    await supabase.from('raffle_wins').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await supabase.from('submissions').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     setSubmissions([]);
     setWins([]);
   }, []);
@@ -50,7 +66,6 @@ export function useSubmissions() {
   const getWinsForSubmission = useCallback((submissionId: string, period: 'daily' | 'weekly' | 'monthly') => {
     const now = new Date();
     let startDate: Date;
-
     if (period === 'daily') {
       startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     } else if (period === 'weekly') {
@@ -59,7 +74,6 @@ export function useSubmissions() {
     } else {
       startDate = new Date(now.getFullYear(), now.getMonth(), 1);
     }
-
     return wins.filter(w =>
       w.submissionId === submissionId &&
       new Date(w.date) >= startDate
@@ -73,12 +87,18 @@ export function useSubmissions() {
     return daily < config.maxDailyWins && weekly < config.maxWeeklyWins && monthly < config.maxMonthlyWins;
   }, [getWinsForSubmission]);
 
-  const addWin = useCallback((submissionId: string, submissionData: Record<string, string>) => {
+  const addWin = useCallback(async (submissionId: string, submissionData: Record<string, string>) => {
+    const { data: row, error } = await supabase
+      .from('raffle_wins')
+      .insert({ submission_id: submissionId, submission_data: submissionData })
+      .select()
+      .single();
+    if (error) throw error;
     const win: RaffleWin = {
-      id: generateId(),
-      submissionId,
-      submissionData,
-      date: new Date().toISOString(),
+      id: row.id,
+      submissionId: row.submission_id,
+      submissionData: (row.submission_data as Record<string, string>) || {},
+      date: row.date,
     };
     setWins(prev => [...prev, win]);
     return win;
@@ -92,31 +112,38 @@ export function useSubmissions() {
     });
   }, [wins]);
 
-  const drawRandom = useCallback((count: number, config: PageConfig) => {
+  const drawRandom = useCallback(async (count: number, config: PageConfig) => {
     const eligible = submissions.filter(s => canWin(s.id, config));
     const shuffled = [...eligible].sort(() => Math.random() - 0.5);
     const winners = shuffled.slice(0, Math.min(count, shuffled.length));
-    const newWins = winners.map(w => addWin(w.id, w.data));
+    const newWins: RaffleWin[] = [];
+    for (const w of winners) {
+      const win = await addWin(w.id, w.data);
+      newWins.push(win);
+    }
     return { winners, wins: newWins };
   }, [submissions, canWin, addWin]);
 
-  const drawSelected = useCallback((submissionIds: string[], config: PageConfig) => {
-    const results = submissionIds
-      .filter(id => canWin(id, config))
-      .map(id => {
-        const sub = submissions.find(s => s.id === id);
-        if (sub) return addWin(sub.id, sub.data);
-        return null;
-      })
-      .filter(Boolean) as RaffleWin[];
+  const drawSelected = useCallback(async (submissionIds: string[], config: PageConfig) => {
+    const results: RaffleWin[] = [];
+    for (const id of submissionIds) {
+      if (!canWin(id, config)) continue;
+      const sub = submissions.find(s => s.id === id);
+      if (sub) {
+        const win = await addWin(sub.id, sub.data);
+        results.push(win);
+      }
+    }
     return results;
   }, [submissions, canWin, addWin]);
 
-  const updateSubmission = useCallback((id: string, data: Record<string, string>) => {
+  const updateSubmission = useCallback(async (id: string, data: Record<string, string>) => {
+    await supabase.from('submissions').update({ data }).eq('id', id);
     setSubmissions(prev => prev.map(s => s.id === id ? { ...s, data } : s));
   }, []);
 
-  const removeSubmission = useCallback((id: string) => {
+  const removeSubmission = useCallback(async (id: string) => {
+    await supabase.from('submissions').delete().eq('id', id);
     setSubmissions(prev => prev.filter(s => s.id !== id));
     setWins(prev => prev.filter(w => w.submissionId !== id));
   }, []);
@@ -124,6 +151,7 @@ export function useSubmissions() {
   return {
     submissions,
     wins,
+    loading,
     addSubmission,
     clearSubmissions,
     updateSubmission,

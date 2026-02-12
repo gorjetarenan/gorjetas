@@ -32,6 +32,53 @@ export type Database = {
         }
         Relationships: []
       }
+      raffle_wins: {
+        Row: {
+          date: string
+          id: string
+          submission_data: Json
+          submission_id: string
+        }
+        Insert: {
+          date?: string
+          id?: string
+          submission_data?: Json
+          submission_id: string
+        }
+        Update: {
+          date?: string
+          id?: string
+          submission_data?: Json
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raffle_wins_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      submissions: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
