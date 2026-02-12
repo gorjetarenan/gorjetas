@@ -12,11 +12,11 @@ import { Shuffle, Users, Trophy, Trash2, Dices, Pencil, X, Check, ChevronLeft, C
 interface SubmissionsHook {
   submissions: Submission[];
   wins: RaffleWin[];
-  clearSubmissions: () => void;
-  updateSubmission: (id: string, data: Record<string, string>) => void;
-  removeSubmission: (id: string) => void;
-  drawRandom: (count: number, config: PageConfig) => { winners: Submission[]; wins: RaffleWin[] };
-  drawSelected: (ids: string[], config: PageConfig) => RaffleWin[];
+  clearSubmissions: () => void | Promise<void>;
+  updateSubmission: (id: string, data: Record<string, string>) => void | Promise<void>;
+  removeSubmission: (id: string) => void | Promise<void>;
+  drawRandom: (count: number, config: PageConfig) => Promise<{ winners: Submission[]; wins: RaffleWin[] }>;
+  drawSelected: (ids: string[], config: PageConfig) => Promise<RaffleWin[]>;
   canWin: (id: string, config: PageConfig) => boolean;
   getWinsForSubmission: (id: string, period: 'daily' | 'weekly' | 'monthly') => number;
 }
@@ -76,12 +76,12 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
     }, 80 + tick * 3);
   };
 
-  const handleRandomDraw = () => {
+  const handleRandomDraw = async () => {
     if (sub.submissions.length === 0) {
       toast.error('Nenhum cadastro disponível para sorteio');
       return;
     }
-    const result = sub.drawRandom(randomCount, config);
+    const result = await sub.drawRandom(randomCount, config);
     if (result.winners.length === 0) {
       toast.error('Nenhum participante elegível encontrado');
     } else {
@@ -89,12 +89,12 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
     }
   };
 
-  const handleManualDraw = () => {
+  const handleManualDraw = async () => {
     if (selectedIds.length === 0) {
       toast.error('Selecione pelo menos um participante');
       return;
     }
-    const results = sub.drawSelected(selectedIds, config);
+    const results = await sub.drawSelected(selectedIds, config);
     setSelectedIds([]);
     if (results.length === 0) {
       toast.error('Nenhum participante selecionado é elegível');

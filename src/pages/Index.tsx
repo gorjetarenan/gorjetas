@@ -41,7 +41,7 @@ const Index = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const enabledFields = config.fields.filter(f => f.enabled);
     const missing = enabledFields.filter(f => f.required && !formData[f.id]?.trim());
@@ -61,9 +61,13 @@ const Index = () => {
       return;
     }
 
-    addSubmission(formData);
-    setSubmitted(true);
-    toast.success('Cadastro realizado com sucesso!');
+    try {
+      await addSubmission(formData);
+      setSubmitted(true);
+      toast.success('Cadastro realizado com sucesso!');
+    } catch {
+      toast.error('Erro ao realizar cadastro. Tente novamente.');
+    }
   };
 
   const enabledFields = config.fields.filter(f => f.enabled);
