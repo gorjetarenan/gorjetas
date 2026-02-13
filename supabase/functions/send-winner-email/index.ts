@@ -42,7 +42,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: `${fromName} <onboarding@resend.dev>`,
+        from: `${fromName} <noreply@renanpeterlini.com.br>`,
         to: [to],
         subject,
         html: htmlBody,
