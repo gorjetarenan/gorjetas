@@ -38,6 +38,41 @@ export function useSubmissions() {
 
   useEffect(() => {
     Promise.all([fetchSubmissions(), fetchWins()]).finally(() => setLoading(false));
+
+    const channel = supabase
+      .channel('submissions-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'submissions' },
+        (payload) => {
+          const row = payload.new as { id: string; data: Record<string, string>; created_at: string };
+          setSubmissions(prev => {
+            if (prev.some(s => s.id === row.id)) return prev;
+            return [...prev, { id: row.id, data: row.data || {}, createdAt: row.created_at }];
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'submissions' },
+        (payload) => {
+          const old = payload.old as { id: string };
+          setSubmissions(prev => prev.filter(s => s.id !== old.id));
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'submissions' },
+        (payload) => {
+          const row = payload.new as { id: string; data: Record<string, string>; created_at: string };
+          setSubmissions(prev => prev.map(s => s.id === row.id ? { ...s, data: row.data || {} } : s));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchSubmissions, fetchWins]);
 
   const addSubmission = useCallback(async (data: Record<string, string>) => {
