@@ -20,6 +20,10 @@ export interface PageConfig {
   maxMonthlyWins: number;
   raffleRules: string;
   raffleRulesEnabled: boolean;
+  emailNotificationEnabled: boolean;
+  emailFromName: string;
+  emailSubject: string;
+  emailBody: string;
 }
 
 export interface FormField {
@@ -70,4 +74,8 @@ export const defaultConfig: PageConfig = {
   maxMonthlyWins: 50,
   raffleRules: '1. O sorteio é válido apenas para contas cadastradas.\n2. Cada participante pode ganhar no máximo uma vez por dia.\n3. O resultado é aleatório e irrevogável.\n4. Ao participar, você concorda com todas as regras.\n5. A administração se reserva o direito de desqualificar participantes que violem as regras.',
   raffleRulesEnabled: true,
+  emailNotificationEnabled: false,
+  emailFromName: 'Gorjetas',
+  emailSubject: '🎉 Parabéns, {{fullName}}! Você foi sorteado!',
+  emailBody: 'Olá {{fullName}},\n\nParabéns! Você foi sorteado no nosso sistema de gorjetas!\n\nSeu ID de conta: {{accountId}}\nData do sorteio: {{date}}\n\nEntre em contato conosco para resgatar seu prêmio.\n\nAbraços,\nEquipe Gorjetas',
 };

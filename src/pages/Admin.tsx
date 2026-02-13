@@ -8,6 +8,7 @@ import AdminTexts from '@/components/AdminTexts';
 import AdminRaffle from '@/components/AdminRaffle';
 import AdminRules from '@/components/AdminRules';
 import AdminExport from '@/components/AdminExport';
+import AdminEmail from '@/components/AdminEmail';
 import AdminBanned from '@/components/AdminBanned';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, RotateCcw, LogOut } from 'lucide-react';
@@ -52,6 +53,7 @@ const Admin = () => {
               <TabsTrigger value="raffle" className="text-xs md:text-sm px-3">Sorteio</TabsTrigger>
               <TabsTrigger value="rules" className="text-xs md:text-sm px-3">Regras</TabsTrigger>
               <TabsTrigger value="banned" className="text-xs md:text-sm px-3">Banidos</TabsTrigger>
+              <TabsTrigger value="email" className="text-xs md:text-sm px-3">Email</TabsTrigger>
               <TabsTrigger value="export" className="text-xs md:text-sm px-3">Exportar</TabsTrigger>
             </TabsList>
             <ScrollBar orientation="horizontal" />
@@ -74,6 +76,9 @@ const Admin = () => {
           </TabsContent>
           <TabsContent value="banned">
             <AdminBanned banned={banned} onAdd={addBan} onRemove={removeBan} />
+          </TabsContent>
+          <TabsContent value="email">
+            <AdminEmail config={config} onUpdate={updateConfig} />
           </TabsContent>
           <TabsContent value="export">
             <AdminExport submissions={submissionsHook} />

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Submission, RaffleWin, PageConfig } from '@/types/config';
+import { toast } from 'sonner';
 
 export function useSubmissions() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -147,6 +148,36 @@ export function useSubmissions() {
     return win;
   }, []);
 
+  const sendWinnerEmail = useCallback(async (winnerData: Record<string, string>, config: PageConfig) => {
+    if (!config.emailNotificationEnabled) return;
+    const email = winnerData.email;
+    if (!email) return;
+
+    const replaceVars = (text: string) => {
+      return text
+        .replace(/\{\{fullName\}\}/g, winnerData.fullName || '')
+        .replace(/\{\{email\}\}/g, winnerData.email || '')
+        .replace(/\{\{accountId\}\}/g, winnerData.accountId || '')
+        .replace(/\{\{date\}\}/g, new Date().toLocaleDateString('pt-BR'));
+    };
+
+    try {
+      const { data, error } = await supabase.functions.invoke('send-winner-email', {
+        body: {
+          to: email,
+          subject: replaceVars(config.emailSubject),
+          body: replaceVars(config.emailBody),
+          fromName: config.emailFromName,
+        },
+      });
+      if (error) throw error;
+      toast.success(`Email enviado para ${email}`);
+    } catch (err) {
+      console.error('Error sending winner email:', err);
+      toast.error(`Falha ao enviar email para ${email}`);
+    }
+  }, []);
+
   const getWinsByDate = useCallback((date: string) => {
     return wins.filter(w => {
       const winLocal = new Date(w.date);
@@ -163,9 +194,10 @@ export function useSubmissions() {
     for (const w of winners) {
       const win = await addWin(w.id, w.data);
       newWins.push(win);
+      sendWinnerEmail(w.data, config);
     }
     return { winners, wins: newWins };
-  }, [submissions, canWin, addWin]);
+  }, [submissions, canWin, addWin, sendWinnerEmail]);
 
   const drawSelected = useCallback(async (submissionIds: string[], config: PageConfig) => {
     const results: RaffleWin[] = [];
@@ -175,10 +207,11 @@ export function useSubmissions() {
       if (sub) {
         const win = await addWin(sub.id, sub.data);
         results.push(win);
+        sendWinnerEmail(sub.data, config);
       }
     }
     return results;
-  }, [submissions, canWin, addWin]);
+  }, [submissions, canWin, addWin, sendWinnerEmail]);
 
   const updateSubmission = useCallback(async (id: string, data: Record<string, string>) => {
     await supabase.from('submissions').update({ data }).eq('id', id);
