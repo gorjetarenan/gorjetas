@@ -76,6 +76,14 @@ export function useSubmissions() {
   }, [fetchSubmissions, fetchWins]);
 
   const addSubmission = useCallback(async (data: Record<string, string>) => {
+    // Check for duplicate accountId
+    if (data.accountId) {
+      const existing = submissions.find(s => s.data.accountId === data.accountId);
+      if (existing) {
+        throw new Error('ID_ALREADY_EXISTS');
+      }
+    }
+
     const { data: rows, error } = await supabase
       .from('submissions')
       .insert({ data })
@@ -89,7 +97,7 @@ export function useSubmissions() {
     };
     setSubmissions(prev => [...prev, submission]);
     return submission;
-  }, []);
+  }, [submissions]);
 
   const clearSubmissions = useCallback(async () => {
     await supabase.from('raffle_wins').delete().neq('id', '00000000-0000-0000-0000-000000000000');
