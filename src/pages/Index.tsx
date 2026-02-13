@@ -65,8 +65,12 @@ const Index = () => {
       await addSubmission(formData);
       setSubmitted(true);
       toast.success('Cadastro realizado com sucesso!');
-    } catch {
-      toast.error('Erro ao realizar cadastro. Tente novamente.');
+    } catch (err: any) {
+      if (err?.message === 'ID_ALREADY_EXISTS') {
+        toast.error('Este ID já está cadastrado!');
+      } else {
+        toast.error('Erro ao realizar cadastro. Tente novamente.');
+      }
     }
   };
 
