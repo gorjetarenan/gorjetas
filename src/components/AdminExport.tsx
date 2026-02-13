@@ -4,8 +4,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Submission, RaffleWin } from '@/types/config';
-import { Download, FileText } from 'lucide-react';
+import { Download, FileText, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface SubmissionsHook {
   submissions: Submission[];
@@ -17,62 +19,93 @@ interface Props {
   submissions: SubmissionsHook;
 }
 
+const downloadCSV = (filename: string, headers: string[], rows: string[][]) => {
+  const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${(c || '').replace(/"/g, '""')}"`).join(','))].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+const downloadPDF = (title: string, filename: string, headers: string[], rows: string[][]) => {
+  const doc = new jsPDF();
+  doc.setFontSize(16);
+  doc.text(title, 14, 20);
+  doc.setFontSize(10);
+  doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
+
+  autoTable(doc, {
+    startY: 34,
+    head: [headers],
+    body: rows,
+    styles: { fontSize: 8, cellPadding: 3 },
+    headStyles: { fillColor: [15, 23, 42] },
+  });
+
+  doc.save(filename);
+};
+
 const AdminExport = ({ submissions: sub }: Props) => {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split('T')[0]
   );
   const filteredWins = sub.getWinsByDate(selectedDate);
 
-  const exportCSV = () => {
-    if (filteredWins.length === 0) {
-      toast.error('Nenhum dado para exportar nesta data');
-      return;
-    }
+  const getWinHeaders = () => {
+    const dataKeys = filteredWins.length > 0 ? Object.keys(filteredWins[0].submissionData) : [];
+    return ['#', 'Data do Sorteio', ...dataKeys];
+  };
 
-    const headers = ['ID', 'Data', ...Object.keys(filteredWins[0]?.submissionData || {})];
-    const rows = filteredWins.map(w => [
-      w.submissionId,
+  const getWinRows = () =>
+    filteredWins.map((w, i) => [
+      String(i + 1),
       new Date(w.date).toLocaleString('pt-BR'),
       ...Object.values(w.submissionData),
     ]);
 
-    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `sorteados_${selectedDate}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('Arquivo exportado com sucesso!');
+  const getSubHeaders = () => {
+    const allKeys = new Set<string>();
+    sub.submissions.forEach(s => Object.keys(s.data).forEach(k => allKeys.add(k)));
+    return ['#', 'Data Cadastro', ...Array.from(allKeys)];
   };
 
-  const exportAllSubmissions = () => {
-    if (sub.submissions.length === 0) {
-      toast.error('Nenhum cadastro para exportar');
-      return;
-    }
-
+  const getSubRows = () => {
     const allKeys = new Set<string>();
     sub.submissions.forEach(s => Object.keys(s.data).forEach(k => allKeys.add(k)));
     const keys = Array.from(allKeys);
-
-    const headers = ['ID', 'Data Cadastro', ...keys];
-    const rows = sub.submissions.map(s => [
-      s.id,
+    return sub.submissions.map((s, i) => [
+      String(i + 1),
       new Date(s.createdAt).toLocaleString('pt-BR'),
       ...keys.map(k => s.data[k] || ''),
     ]);
+  };
 
-    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `todos_cadastros_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('Arquivo exportado com sucesso!');
+  const exportWinsCSV = () => {
+    if (filteredWins.length === 0) { toast.error('Nenhum sorteado para esta data'); return; }
+    downloadCSV(`sorteados_${selectedDate}.csv`, getWinHeaders(), getWinRows());
+    toast.success('CSV exportado com sucesso!');
+  };
+
+  const exportWinsPDF = () => {
+    if (filteredWins.length === 0) { toast.error('Nenhum sorteado para esta data'); return; }
+    const dateFormatted = selectedDate.split('-').reverse().join('/');
+    downloadPDF(`Sorteados — ${dateFormatted}`, `sorteados_${selectedDate}.pdf`, getWinHeaders(), getWinRows());
+    toast.success('PDF exportado com sucesso!');
+  };
+
+  const exportAllCSV = () => {
+    if (sub.submissions.length === 0) { toast.error('Nenhum cadastro para exportar'); return; }
+    downloadCSV(`todos_cadastros_${new Date().toISOString().split('T')[0]}.csv`, getSubHeaders(), getSubRows());
+    toast.success('CSV exportado com sucesso!');
+  };
+
+  const exportAllPDF = () => {
+    if (sub.submissions.length === 0) { toast.error('Nenhum cadastro para exportar'); return; }
+    downloadPDF('Todos os Cadastros', `todos_cadastros_${new Date().toISOString().split('T')[0]}.pdf`, getSubHeaders(), getSubRows());
+    toast.success('PDF exportado com sucesso!');
   };
 
   return (
@@ -107,9 +140,14 @@ const AdminExport = ({ submissions: sub }: Props) => {
             </div>
           )}
 
-          <Button onClick={exportCSV} disabled={filteredWins.length === 0}>
-            <Download className="mr-2 h-4 w-4" /> Exportar CSV (Sorteados)
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={exportWinsCSV} disabled={filteredWins.length === 0}>
+              <Download className="mr-2 h-4 w-4" /> CSV
+            </Button>
+            <Button onClick={exportWinsPDF} disabled={filteredWins.length === 0} variant="outline">
+              <FileDown className="mr-2 h-4 w-4" /> PDF
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -123,9 +161,14 @@ const AdminExport = ({ submissions: sub }: Props) => {
           <p className="mb-4 text-sm text-muted-foreground">
             Total de cadastros: <strong className="text-foreground">{sub.submissions.length}</strong>
           </p>
-          <Button onClick={exportAllSubmissions} disabled={sub.submissions.length === 0}>
-            <Download className="mr-2 h-4 w-4" /> Exportar Todos os Cadastros
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={exportAllCSV} disabled={sub.submissions.length === 0}>
+              <Download className="mr-2 h-4 w-4" /> CSV
+            </Button>
+            <Button onClick={exportAllPDF} disabled={sub.submissions.length === 0} variant="outline">
+              <FileDown className="mr-2 h-4 w-4" /> PDF
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
