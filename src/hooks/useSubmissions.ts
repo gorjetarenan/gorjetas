@@ -178,8 +178,8 @@ export function useSubmissions() {
 
   const getWinsByDate = useCallback((date: string) => {
     return wins.filter(w => {
-      const winLocal = new Date(w.date);
-      const winDateStr = `${winLocal.getFullYear()}-${String(winLocal.getMonth() + 1).padStart(2, '0')}-${String(winLocal.getDate()).padStart(2, '0')}`;
+      const winDate = new Date(w.date);
+      const winDateStr = `${winDate.getUTCFullYear()}-${String(winDate.getUTCMonth() + 1).padStart(2, '0')}-${String(winDate.getUTCDate()).padStart(2, '0')}`;
       return winDateStr === date;
     });
   }, [wins]);
