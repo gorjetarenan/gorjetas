@@ -85,18 +85,16 @@ export function useSubmissions() {
       }
     }
 
-    const { data: rows, error } = await supabase
+    const { error } = await supabase
       .from('submissions')
-      .insert({ data })
-      .select()
-      .single();
+      .insert({ data });
     if (error) throw error;
+    // The realtime subscription will add the new submission to state
     const submission: Submission = {
-      id: rows.id,
-      data: (rows.data as Record<string, string>) || {},
-      createdAt: rows.created_at,
+      id: crypto.randomUUID(),
+      data,
+      createdAt: new Date().toISOString(),
     };
-    setSubmissions(prev => [...prev, submission]);
     return submission;
   }, [submissions]);
 
