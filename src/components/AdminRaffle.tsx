@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Shuffle, Users, Trophy, Trash2, Dices, Pencil, X, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -37,6 +38,7 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinningNames, setSpinningNames] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Record<string, string>>({});
@@ -55,6 +57,7 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
     setIsSpinning(true);
     setShowResults(false);
     setLastResults(pendingWins);
+    setDialogOpen(true);
 
     let tick = 0;
     const totalTicks = 30;
@@ -346,11 +349,11 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
         </CardContent>
       </Card>
 
-      {/* Casino Animation */}
-      {isSpinning && (
-        <Card className="overflow-hidden border-accent/50">
-          <CardContent className="py-8">
-            <div className="flex flex-col items-center gap-4">
+      {/* Raffle Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={(open) => { if (!isSpinning) setDialogOpen(open); }}>
+        <DialogContent className="sm:max-w-md border-accent/30" onPointerDownOutside={e => { if (isSpinning) e.preventDefault(); }}>
+          {isSpinning && (
+            <div className="flex flex-col items-center gap-6 py-6">
               <div className="flex gap-3 text-4xl animate-bounce">
                 {CASINO_EMOJIS.slice(0, 5).map((emoji, i) => (
                   <span
@@ -366,7 +369,7 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
                 ))}
               </div>
 
-              <div className="relative w-full max-w-md overflow-hidden rounded-xl border-2 border-accent/40 bg-secondary/80 p-4">
+              <div className="relative w-full overflow-hidden rounded-xl border-2 border-accent/40 bg-secondary/80 p-4">
                 <div className="absolute inset-0 bg-gradient-to-r from-accent/5 via-accent/10 to-accent/5 animate-pulse" />
                 <div className="relative space-y-2">
                   {spinningNames.map((name, i) => (
@@ -382,44 +385,41 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
 
               <p className="text-sm font-medium text-accent animate-pulse">🎰 Sorteando...</p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
 
-      {/* Results */}
-      {showResults && lastResults.length > 0 && (
-        <Card className="border-accent/30 animate-scale-in">
-          <CardContent className="py-6">
-            <div className="mb-6 text-center">
-              <div className="mb-2 text-5xl">🎉🏆🎉</div>
-              <h3 className="text-2xl font-bold text-accent">
-                {lastResults.length === 1 ? 'Ganhador!' : 'Ganhadores!'}
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1">Parabéns aos sorteados!</p>
-            </div>
+          {showResults && lastResults.length > 0 && (
+            <div className="py-4">
+              <div className="mb-6 text-center">
+                <div className="mb-2 text-5xl">🎉🏆🎉</div>
+                <h3 className="text-2xl font-bold text-accent">
+                  {lastResults.length === 1 ? 'Ganhador!' : 'Ganhadores!'}
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">Parabéns aos sorteados!</p>
+              </div>
 
-            <div className="space-y-3 max-w-lg mx-auto">
-              {lastResults.map((w, i) => (
-                <div
-                  key={w.id}
-                  className="flex items-center gap-4 rounded-xl border border-accent/20 bg-accent/5 p-4 animate-fade-in"
-                  style={{ animationDelay: `${i * 0.15}s`, animationFillMode: 'backwards' }}
-                >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-lg font-bold text-accent-foreground shadow-lg">
-                    {i + 1}
-                  </span>
-                  <div className="flex-1">
-                    <span className="text-base font-semibold text-foreground">
-                      {Object.values(w.submissionData).join(' — ')}
+              <div className="space-y-3">
+                {lastResults.map((w, i) => (
+                  <div
+                    key={w.id}
+                    className="flex items-center gap-4 rounded-xl border border-accent/20 bg-accent/5 p-4 animate-fade-in"
+                    style={{ animationDelay: `${i * 0.15}s`, animationFillMode: 'backwards' }}
+                  >
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-lg font-bold text-accent-foreground shadow-lg">
+                      {i + 1}
                     </span>
+                    <div className="flex-1">
+                      <span className="text-base font-semibold text-foreground">
+                        {Object.values(w.submissionData).join(' — ')}
+                      </span>
+                    </div>
+                    <span className="text-2xl">{CASINO_EMOJIS[i % CASINO_EMOJIS.length]}</span>
                   </div>
-                  <span className="text-2xl">{CASINO_EMOJIS[i % CASINO_EMOJIS.length]}</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
