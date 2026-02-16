@@ -159,11 +159,9 @@ const Index = () => {
               <p className="text-xs font-semibold text-foreground/90 flex items-center gap-1.5">
                 📜 Regras do Sorteio
               </p>
-              <ScrollArea className="max-h-[300px] pr-2">
-                <div className="whitespace-pre-line text-xs text-foreground/70 leading-relaxed">
-                  {config.raffleRules}
-                </div>
-              </ScrollArea>
+              <div className="whitespace-pre-line text-xs text-foreground/70 leading-relaxed">
+                {config.raffleRules}
+              </div>
               <div className="flex items-start gap-2 pt-1 border-t border-border/20">
                 <Checkbox
                   id="accept-rules"
