@@ -15,15 +15,17 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
+import AccessGate from '@/components/AccessGate';
 
 const Index = () => {
-  const { config } = useConfig();
+  const { config, loading } = useConfig();
   const { addSubmission } = useSubmissions();
   const { isBanned } = useBanned();
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [acceptedRules, setAcceptedRules] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [accessGranted, setAccessGranted] = useState(false);
 
   const backgroundStyle = (): React.CSSProperties => {
     if (config.backgroundType === 'solid') {
@@ -75,6 +77,27 @@ const Index = () => {
   };
 
   const enabledFields = config.fields.filter(f => f.enabled);
+
+  const needsPassword = config.accessPasswordEnabled && config.accessPassword && !accessGranted;
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center" style={backgroundStyle()}>
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (needsPassword) {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center" style={backgroundStyle()}>
+        <AccessGate
+          correctPassword={config.accessPassword}
+          onSuccess={() => setAccessGranted(true)}
+        />
+      </div>
+    );
+  }
 
   if (submitted) {
     return (
