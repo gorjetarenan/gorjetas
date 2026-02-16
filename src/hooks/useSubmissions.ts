@@ -192,7 +192,17 @@ export function useSubmissions() {
   }, [wins]);
 
   const drawRandom = useCallback(async (count: number, config: PageConfig) => {
-    const eligible = submissions.filter(s => canWin(s.data, config));
+    let eligible = submissions.filter(s => canWin(s.data, config));
+
+    // Filter by validated players if enabled
+    if (config.postbackValidationEnabled) {
+      const { data: validatedPlayers } = await supabase
+        .from('validated_players')
+        .select('player_id');
+      const validIds = new Set((validatedPlayers || []).map(p => p.player_id));
+      eligible = eligible.filter(s => validIds.has(s.data.accountId || ''));
+    }
+
     const shuffled = [...eligible].sort(() => Math.random() - 0.5);
     const winners = shuffled.slice(0, Math.min(count, shuffled.length));
     const newWins: RaffleWin[] = [];
@@ -205,15 +215,22 @@ export function useSubmissions() {
   }, [submissions, canWin, addWin, sendWinnerEmail]);
 
   const drawSelected = useCallback(async (submissionIds: string[], config: PageConfig) => {
+    let validIds: Set<string> | null = null;
+    if (config.postbackValidationEnabled) {
+      const { data: validatedPlayers } = await supabase
+        .from('validated_players')
+        .select('player_id');
+      validIds = new Set((validatedPlayers || []).map(p => p.player_id));
+    }
+
     const results: RaffleWin[] = [];
     for (const id of submissionIds) {
       const sub = submissions.find(s => s.id === id);
       if (!sub || !canWin(sub.data, config)) continue;
-      if (sub) {
-        const win = await addWin(sub.id, sub.data);
-        results.push(win);
-        sendWinnerEmail(sub.data, config);
-      }
+      if (validIds && !validIds.has(sub.data.accountId || '')) continue;
+      const win = await addWin(sub.id, sub.data);
+      results.push(win);
+      sendWinnerEmail(sub.data, config);
     }
     return results;
   }, [submissions, canWin, addWin, sendWinnerEmail]);

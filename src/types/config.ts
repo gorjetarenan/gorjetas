@@ -31,6 +31,7 @@ export interface PageConfig {
   accessGatePlaceholder: string;
   accessGateButtonText: string;
   accessGateErrorText: string;
+  postbackValidationEnabled: boolean;
 }
 
 export interface FormField {
@@ -92,4 +93,5 @@ export const defaultConfig: PageConfig = {
   accessGatePlaceholder: 'Palavra-chave',
   accessGateButtonText: 'Entrar',
   accessGateErrorText: 'Palavra-chave incorreta',
+  postbackValidationEnabled: false,
 };

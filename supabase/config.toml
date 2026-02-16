@@ -2,3 +2,6 @@ project_id = "wmctdikdjfqukyyjmxcm"
 
 [functions.send-winner-email]
 verify_jwt = false
+
+[functions.postback]
+verify_jwt = false
