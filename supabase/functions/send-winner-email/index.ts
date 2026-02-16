@@ -12,11 +12,33 @@ serve(async (req) => {
   }
 
   try {
-    const body = await req.json();
+    // Try to parse body - could be JSON or form-urlencoded
+    let params: Record<string, string> = {};
+    
+    const contentType = req.headers.get('content-type') || '';
+    
+    if (contentType.includes('application/x-www-form-urlencoded')) {
+      const text = await req.text();
+      const urlParams = new URLSearchParams(text);
+      urlParams.forEach((value, key) => { params[key] = value; });
+    } else if (contentType.includes('application/json') || req.method === 'POST') {
+      try {
+        params = await req.json();
+      } catch {
+        // If JSON parse fails, try URL params from body
+        const text = await req.text();
+        if (text) {
+          const urlParams = new URLSearchParams(text);
+          urlParams.forEach((value, key) => { params[key] = value; });
+        }
+      }
+    }
 
-    // Route: Postback registration
-    if (body.action === 'postback') {
-      const playerId = body.player_id || body.playerid;
+    // Detect postback: if player_id is present OR action is 'postback'
+    const playerId = params.player_id || params.playerid || params['Player ID'];
+    const isPostback = playerId || params.action === 'postback';
+
+    if (isPostback) {
       if (!playerId) {
         return new Response(
           JSON.stringify({ error: 'player_id is required' }),
@@ -33,9 +55,9 @@ serve(async (req) => {
         .upsert(
           {
             player_id: playerId,
-            currency: body.currency || null,
-            registration_date: body.registration_date || null,
-            type: body.type || null,
+            currency: params.currency || params.Currency || null,
+            registration_date: params.registration_date || params['Registration Date'] || null,
+            type: params.type || params.Type || null,
           },
           { onConflict: 'player_id' }
         );
@@ -48,6 +70,7 @@ serve(async (req) => {
         );
       }
 
+      console.log('Validated player:', playerId);
       return new Response(
         JSON.stringify({ success: true, player_id: playerId }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -60,7 +83,7 @@ serve(async (req) => {
       throw new Error('RESEND_API_KEY is not configured');
     }
 
-    const { to, subject, body: emailBody, fromName } = body;
+    const { to, subject, body: emailBody, fromName } = params as any;
 
     if (!to || !subject || !emailBody) {
       return new Response(JSON.stringify({ error: 'Missing required fields: to, subject, body' }), {
@@ -69,7 +92,7 @@ serve(async (req) => {
       });
     }
 
-    const htmlBody = emailBody.replace(/\n/g, '<br>');
+    const htmlBody = (emailBody as string).replace(/\n/g, '<br>');
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
