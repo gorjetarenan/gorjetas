@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { PageConfig, FormField } from '@/types/config';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -5,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, ListChecks, GripVertical } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Trash2, ListChecks, GripVertical, X } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -38,11 +40,26 @@ interface SortableFieldProps {
 
 const SortableField = ({ field, index, updateField, removeField }: SortableFieldProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: field.id });
+  const [newOption, setNewOption] = useState('');
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+  };
+
+  const addOption = () => {
+    const trimmed = newOption.trim();
+    if (!trimmed) return;
+    const current = field.options || [];
+    if (!current.includes(trimmed)) {
+      updateField(index, { options: [...current, trimmed] });
+    }
+    setNewOption('');
+  };
+
+  const removeOption = (opt: string) => {
+    updateField(index, { options: (field.options || []).filter(o => o !== opt) });
   };
 
   return (
@@ -81,6 +98,7 @@ const SortableField = ({ field, index, updateField, removeField }: SortableField
               <SelectItem value="text">Texto</SelectItem>
               <SelectItem value="email">Email</SelectItem>
               <SelectItem value="number">Número</SelectItem>
+              <SelectItem value="select">Combobox</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -89,6 +107,36 @@ const SortableField = ({ field, index, updateField, removeField }: SortableField
           <Label className="text-xs">Obrigatório</Label>
         </div>
       </div>
+
+      {field.type === 'select' && (
+        <div className="space-y-2 border-t border-border/30 pt-3">
+          <Label className="text-xs">Opções do Combobox</Label>
+          <div className="flex gap-2">
+            <Input
+              value={newOption}
+              onChange={e => setNewOption(e.target.value)}
+              placeholder="Digite uma opção..."
+              className="h-9 text-sm"
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addOption(); } }}
+            />
+            <Button type="button" size="sm" variant="outline" onClick={addOption} className="h-9 px-3">
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+          {(field.options && field.options.length > 0) && (
+            <div className="flex flex-wrap gap-1.5">
+              {field.options.map(opt => (
+                <Badge key={opt} variant="secondary" className="gap-1 pr-1 text-xs">
+                  {opt}
+                  <button type="button" onClick={() => removeOption(opt)} className="rounded-full p-0.5 hover:bg-destructive/20">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

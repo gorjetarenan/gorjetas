@@ -42,9 +42,10 @@ export interface FormField {
   id: string;
   label: string;
   placeholder: string;
-  type: 'text' | 'email' | 'number';
+  type: 'text' | 'email' | 'number' | 'select';
   required: boolean;
   enabled: boolean;
+  options?: string[];
 }
 
 export interface Submission {
