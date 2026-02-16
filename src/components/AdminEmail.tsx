@@ -12,12 +12,12 @@ interface Props {
   onUpdate: (updates: Partial<PageConfig>) => void;
 }
 
-const AVAILABLE_VARIABLES = [
-  { name: '{{fullName}}', description: 'Nome completo' },
-  { name: '{{email}}', description: 'Email' },
-  { name: '{{accountId}}', description: 'ID da Conta' },
-  { name: '{{date}}', description: 'Data do sorteio' },
-];
+const getAvailableVariables = (config: PageConfig) => {
+  const fieldVars = config.fields
+    .filter(f => f.enabled)
+    .map(f => ({ name: `{{${f.id}}}`, description: f.label }));
+  return [...fieldVars, { name: '{{date}}', description: 'Data do sorteio' }];
+};
 
 const AdminEmail = ({ config, onUpdate }: Props) => {
   return (
@@ -74,7 +74,7 @@ const AdminEmail = ({ config, onUpdate }: Props) => {
               <span className="text-sm font-medium text-foreground">Variáveis Disponíveis</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {AVAILABLE_VARIABLES.map((v) => (
+              {getAvailableVariables(config).map((v) => (
                 <Badge key={v.name} variant="secondary" className="font-mono text-xs cursor-default">
                   {v.name} <span className="ml-1 font-sans text-muted-foreground">— {v.description}</span>
                 </Badge>

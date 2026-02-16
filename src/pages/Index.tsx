@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import AccessGate from '@/components/AccessGate';
@@ -165,14 +166,30 @@ const Index = () => {
               <Label htmlFor={field.id} className="text-sm text-foreground/90">
                 {field.label} {field.required && <span className="text-destructive">*</span>}
               </Label>
-              <Input
-                id={field.id}
-                type={field.type}
-                placeholder={field.placeholder}
-                value={formData[field.id] || ''}
-                onChange={e => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
-                className="h-11 border-border/40 bg-secondary text-foreground placeholder:text-muted-foreground/60 sm:h-10"
-              />
+              {field.type === 'select' ? (
+                <Select
+                  value={formData[field.id] || ''}
+                  onValueChange={v => setFormData(prev => ({ ...prev, [field.id]: v }))}
+                >
+                  <SelectTrigger className="h-11 border-border/40 bg-secondary text-foreground sm:h-10">
+                    <SelectValue placeholder={field.placeholder || 'Selecione...'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(field.options || []).map(opt => (
+                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  id={field.id}
+                  type={field.type}
+                  placeholder={field.placeholder}
+                  value={formData[field.id] || ''}
+                  onChange={e => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
+                  className="h-11 border-border/40 bg-secondary text-foreground placeholder:text-muted-foreground/60 sm:h-10"
+                />
+              )}
             </div>
           ))}
 
