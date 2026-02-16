@@ -155,23 +155,26 @@ const Index = () => {
           ))}
 
           {config.raffleRulesEnabled && (
-            <div className="flex items-start gap-2 pt-1">
-              <Checkbox
-                id="accept-rules"
-                checked={acceptedRules}
-                onCheckedChange={(v) => setAcceptedRules(v === true)}
-                className="mt-0.5"
-              />
-              <label htmlFor="accept-rules" className="text-sm text-foreground/80 leading-tight">
-                Li e aceito as{' '}
-                <button
-                  type="button"
-                  onClick={() => setRulesOpen(true)}
-                  className="text-primary underline underline-offset-2 hover:text-primary/80 font-medium"
-                >
-                  regras do sorteio
-                </button>
-              </label>
+            <div className="rounded-lg border border-border/30 bg-secondary/50 p-3 sm:p-4 space-y-2">
+              <p className="text-xs font-semibold text-foreground/90 flex items-center gap-1.5">
+                📜 Regras do Sorteio
+              </p>
+              <ScrollArea className="max-h-[150px] pr-2">
+                <div className="whitespace-pre-line text-xs text-foreground/70 leading-relaxed">
+                  {config.raffleRules}
+                </div>
+              </ScrollArea>
+              <div className="flex items-start gap-2 pt-1 border-t border-border/20">
+                <Checkbox
+                  id="accept-rules"
+                  checked={acceptedRules}
+                  onCheckedChange={(v) => setAcceptedRules(v === true)}
+                  className="mt-0.5"
+                />
+                <label htmlFor="accept-rules" className="text-sm text-foreground/80 leading-tight">
+                  Li e aceito as regras do sorteio
+                </label>
+              </div>
             </div>
           )}
 
@@ -197,7 +200,7 @@ const Index = () => {
         )}
       </div>
 
-      {/* Rules Dialog */}
+      {/* Rules Dialog (kept for backward compat) */}
       <Dialog open={rulesOpen} onOpenChange={setRulesOpen}>
         <DialogContent className="max-w-lg max-h-[85dvh]">
           <DialogHeader>
