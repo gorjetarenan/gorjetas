@@ -18,7 +18,7 @@ const AdminPostback = ({ config, onUpdate }: Props) => {
   const [copied, setCopied] = useState(false);
   const [validatedCount, setValidatedCount] = useState(0);
 
-  const postbackUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/postback`;
+  const postbackUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-winner-email`;
 
   useEffect(() => {
     const fetchCount = async () => {

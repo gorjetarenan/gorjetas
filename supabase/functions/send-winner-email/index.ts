@@ -1,16 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-interface WinnerEmailRequest {
-  to: string;
-  subject: string;
-  body: string;
-  fromName: string;
-}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -18,22 +12,64 @@ serve(async (req) => {
   }
 
   try {
+    const body = await req.json();
+
+    // Route: Postback registration
+    if (body.action === 'postback') {
+      const playerId = body.player_id || body.playerid;
+      if (!playerId) {
+        return new Response(
+          JSON.stringify({ error: 'player_id is required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseKey);
+
+      const { error } = await supabase
+        .from('validated_players')
+        .upsert(
+          {
+            player_id: playerId,
+            currency: body.currency || null,
+            registration_date: body.registration_date || null,
+            type: body.type || null,
+          },
+          { onConflict: 'player_id' }
+        );
+
+      if (error) {
+        console.error('Error inserting validated player:', error);
+        return new Response(
+          JSON.stringify({ error: 'Failed to store player' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, player_id: playerId }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Route: Send winner email (original functionality)
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
     if (!RESEND_API_KEY) {
       throw new Error('RESEND_API_KEY is not configured');
     }
 
-    const { to, subject, body, fromName } = await req.json() as WinnerEmailRequest;
+    const { to, subject, body: emailBody, fromName } = body;
 
-    if (!to || !subject || !body) {
+    if (!to || !subject || !emailBody) {
       return new Response(JSON.stringify({ error: 'Missing required fields: to, subject, body' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Convert plain text body to HTML (preserve line breaks)
-    const htmlBody = body.replace(/\n/g, '<br>');
+    const htmlBody = emailBody.replace(/\n/g, '<br>');
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -64,7 +100,7 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('Error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
