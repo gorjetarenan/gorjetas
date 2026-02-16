@@ -99,14 +99,15 @@ export function useSubmissions() {
   }, [submissions]);
 
   const clearSubmissions = useCallback(async () => {
-    await supabase.from('raffle_wins').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    // Only delete submissions, keep raffle_wins for 30-day tracking
     await supabase.from('submissions').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     setSubmissions([]);
-    setWins([]);
   }, []);
 
-  const getWinsForSubmission = useCallback((submissionId: string, period: 'daily' | 'weekly' | 'monthly') => {
+  const getWinsForAccount = useCallback((accountId: string, period: 'daily' | 'weekly' | 'monthly') => {
+    if (!accountId) return 0;
     const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     let startDate: Date;
     if (period === 'daily') {
       startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -116,18 +117,24 @@ export function useSubmissions() {
     } else {
       startDate = new Date(now.getFullYear(), now.getMonth(), 1);
     }
-    return wins.filter(w =>
-      w.submissionId === submissionId &&
-      new Date(w.date) >= startDate
-    ).length;
+    // Use the more recent of startDate and thirtyDaysAgo boundary
+    return wins.filter(w => {
+      const winDate = new Date(w.date);
+      const matchesAccount = w.submissionData?.accountId === accountId;
+      const withinPeriod = winDate >= startDate;
+      const within30Days = winDate >= thirtyDaysAgo;
+      return matchesAccount && withinPeriod && within30Days;
+    }).length;
   }, [wins]);
 
-  const canWin = useCallback((submissionId: string, config: PageConfig) => {
-    const daily = getWinsForSubmission(submissionId, 'daily');
-    const weekly = getWinsForSubmission(submissionId, 'weekly');
-    const monthly = getWinsForSubmission(submissionId, 'monthly');
+  const canWin = useCallback((submissionData: Record<string, string>, config: PageConfig) => {
+    const accountId = submissionData?.accountId || '';
+    if (!accountId) return true; // No accountId, no tracking
+    const daily = getWinsForAccount(accountId, 'daily');
+    const weekly = getWinsForAccount(accountId, 'weekly');
+    const monthly = getWinsForAccount(accountId, 'monthly');
     return daily < config.maxDailyWins && weekly < config.maxWeeklyWins && monthly < config.maxMonthlyWins;
-  }, [getWinsForSubmission]);
+  }, [getWinsForAccount]);
 
   const addWin = useCallback(async (submissionId: string, submissionData: Record<string, string>) => {
     const { data: row, error } = await supabase
@@ -185,7 +192,7 @@ export function useSubmissions() {
   }, [wins]);
 
   const drawRandom = useCallback(async (count: number, config: PageConfig) => {
-    const eligible = submissions.filter(s => canWin(s.id, config));
+    const eligible = submissions.filter(s => canWin(s.data, config));
     const shuffled = [...eligible].sort(() => Math.random() - 0.5);
     const winners = shuffled.slice(0, Math.min(count, shuffled.length));
     const newWins: RaffleWin[] = [];
@@ -200,8 +207,8 @@ export function useSubmissions() {
   const drawSelected = useCallback(async (submissionIds: string[], config: PageConfig) => {
     const results: RaffleWin[] = [];
     for (const id of submissionIds) {
-      if (!canWin(id, config)) continue;
       const sub = submissions.find(s => s.id === id);
+      if (!sub || !canWin(sub.data, config)) continue;
       if (sub) {
         const win = await addWin(sub.id, sub.data);
         results.push(win);
@@ -234,6 +241,6 @@ export function useSubmissions() {
     drawRandom,
     drawSelected,
     getWinsByDate,
-    getWinsForSubmission,
+    getWinsForAccount,
   };
 }

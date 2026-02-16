@@ -18,8 +18,8 @@ interface SubmissionsHook {
   removeSubmission: (id: string) => void | Promise<void>;
   drawRandom: (count: number, config: PageConfig) => Promise<{ winners: Submission[]; wins: RaffleWin[] }>;
   drawSelected: (ids: string[], config: PageConfig) => Promise<RaffleWin[]>;
-  canWin: (id: string, config: PageConfig) => boolean;
-  getWinsForSubmission: (id: string, period: 'daily' | 'weekly' | 'monthly') => number;
+  canWin: (submissionData: Record<string, string>, config: PageConfig) => boolean;
+  getWinsForAccount: (accountId: string, period: 'daily' | 'weekly' | 'monthly') => number;
 }
 
 interface Props {
@@ -318,7 +318,7 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
                 <>
                   <div className="max-h-64 space-y-1 overflow-y-auto rounded-lg border border-border/50 p-3">
                     {sub.submissions.map(s => {
-                      const eligible = sub.canWin(s.id, config);
+                      const eligible = sub.canWin(s.data, config);
                       return (
                         <label
                           key={s.id}
