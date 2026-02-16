@@ -12,6 +12,7 @@ import AdminEmail from '@/components/AdminEmail';
 import AdminBanned from '@/components/AdminBanned';
 import AdminAccessPassword from '@/components/AdminAccessPassword';
 import AdminPostback from '@/components/AdminPostback';
+import AdminTipsToggle from '@/components/AdminTipsToggle';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, RotateCcw, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -58,6 +59,7 @@ const Admin = () => {
               <TabsTrigger value="email" className="text-xs md:text-sm px-3">Email</TabsTrigger>
               <TabsTrigger value="access" className="text-xs md:text-sm px-3">Acesso</TabsTrigger>
               <TabsTrigger value="postback" className="text-xs md:text-sm px-3">Postback</TabsTrigger>
+              <TabsTrigger value="tips-toggle" className="text-xs md:text-sm px-3">Gorjetas</TabsTrigger>
               <TabsTrigger value="export" className="text-xs md:text-sm px-3">Exportar</TabsTrigger>
             </TabsList>
             <ScrollBar orientation="horizontal" />
@@ -89,6 +91,9 @@ const Admin = () => {
           </TabsContent>
           <TabsContent value="postback">
             <AdminPostback config={config} onUpdate={updateConfig} />
+          </TabsContent>
+          <TabsContent value="tips-toggle">
+            <AdminTipsToggle config={config} onUpdate={updateConfig} />
           </TabsContent>
           <TabsContent value="export">
             <AdminExport submissions={submissionsHook} />

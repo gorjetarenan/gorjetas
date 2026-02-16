@@ -32,6 +32,10 @@ export interface PageConfig {
   accessGateButtonText: string;
   accessGateErrorText: string;
   postbackValidationEnabled: boolean;
+  tipsDisabled: boolean;
+  tipsDisabledMessage: string;
+  tipsDisabledCtaText: string;
+  tipsDisabledCtaLink: string;
 }
 
 export interface FormField {
@@ -94,4 +98,8 @@ export const defaultConfig: PageConfig = {
   accessGateButtonText: 'Entrar',
   accessGateErrorText: 'Palavra-chave incorreta',
   postbackValidationEnabled: false,
+  tipsDisabled: false,
+  tipsDisabledMessage: '🚫 As gorjetas estão finalizadas por hoje. Volte amanhã!',
+  tipsDisabledCtaText: '🎰 Cadastre-se na Casa de Apostas',
+  tipsDisabledCtaLink: 'https://example.com',
 };
