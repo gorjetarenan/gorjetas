@@ -103,6 +103,33 @@ export type Database = {
         }
         Relationships: []
       }
+      validated_players: {
+        Row: {
+          created_at: string
+          currency: string | null
+          id: string
+          player_id: string
+          registration_date: string | null
+          type: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string | null
+          id?: string
+          player_id: string
+          registration_date?: string | null
+          type?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string | null
+          id?: string
+          player_id?: string
+          registration_date?: string | null
+          type?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
