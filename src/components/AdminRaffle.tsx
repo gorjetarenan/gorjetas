@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Shuffle, Users, Trophy, Trash2, Dices, Pencil, X, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Shuffle, Users, Trophy, Trash2, Dices, Pencil, X, Check, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 
 interface SubmissionsHook {
   submissions: Submission[];
@@ -31,6 +31,7 @@ const CASINO_EMOJIS = ['🎰', '💰', '🃏', '🎲', '💎', '7️⃣', '🍒'
 
 const AdminRaffle = ({ config, submissions: sub }: Props) => {
   const [randomCount, setRandomCount] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -123,34 +124,52 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
     );
   };
 
+  const filteredSubmissions = searchQuery.trim()
+    ? sub.submissions.filter(s => {
+        const q = searchQuery.toLowerCase();
+        return s.id.toLowerCase().includes(q) || Object.values(s.data).some(v => String(v).toLowerCase().includes(q));
+      })
+    : sub.submissions;
+
   return (
     <div className="space-y-6">
       {/* Cadastrados Container */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-primary" /> Cadastrados ({sub.submissions.length})
-          </CardTitle>
-          <div className="flex gap-2">
-            {confirmClear ? (
-              <>
-                <Button variant="destructive" size="sm" onClick={handleClearSubmissions}>
-                  Confirmar Exclusão
+        <CardHeader className="flex flex-col gap-3">
+          <div className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" /> Cadastrados ({sub.submissions.length})
+            </CardTitle>
+            <div className="flex gap-2">
+              {confirmClear ? (
+                <>
+                  <Button variant="destructive" size="sm" onClick={handleClearSubmissions}>
+                    Confirmar Exclusão
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setConfirmClear(false)}>
+                    Cancelar
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearSubmissions}
+                  disabled={sub.submissions.length === 0}
+                >
+                  <Trash2 className="mr-1 h-4 w-4 text-destructive" /> Zerar Cadastros
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => setConfirmClear(false)}>
-                  Cancelar
-                </Button>
-              </>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleClearSubmissions}
-                disabled={sub.submissions.length === 0}
-              >
-                <Trash2 className="mr-1 h-4 w-4 text-destructive" /> Zerar Cadastros
-              </Button>
-            )}
+              )}
+            </div>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Pesquisar por nome ou ID..."
+              value={searchQuery}
+              onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+              className="pl-9"
+            />
           </div>
         </CardHeader>
         <CardContent>
@@ -163,7 +182,7 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
                  <thead className="bg-secondary">
                    <tr>
                      <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">#</th>
-                     {sub.submissions[0] && Object.keys(sub.submissions[0].data).map(key => (
+                     {filteredSubmissions[0] && Object.keys(filteredSubmissions[0].data).map(key => (
                        <th key={key} className="px-3 py-2 text-left text-xs font-medium text-muted-foreground capitalize">{key}</th>
                      ))}
                      <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Data</th>
@@ -172,10 +191,10 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
                  </thead>
                  <tbody>
                    {(() => {
-                     const totalPages = Math.ceil(sub.submissions.length / itemsPerPage);
-                     const safePage = Math.min(currentPage, totalPages || 1);
-                     const start = (safePage - 1) * itemsPerPage;
-                     const paged = sub.submissions.slice(start, start + itemsPerPage);
+                      const totalPages = Math.ceil(filteredSubmissions.length / itemsPerPage);
+                      const safePage = Math.min(currentPage, totalPages || 1);
+                      const start = (safePage - 1) * itemsPerPage;
+                      const paged = filteredSubmissions.slice(start, start + itemsPerPage);
                      return paged.map((s, i) => (
                        <tr key={s.id} className="border-t border-border/30 transition-colors hover:bg-muted/30">
                          <td className="px-3 py-2 text-muted-foreground">{start + i + 1}</td>
@@ -235,8 +254,8 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
              </div>
 
              {/* Pagination */}
-             {sub.submissions.length > itemsPerPage && (() => {
-               const totalPages = Math.ceil(sub.submissions.length / itemsPerPage);
+             {filteredSubmissions.length > itemsPerPage && (() => {
+                const totalPages = Math.ceil(filteredSubmissions.length / itemsPerPage);
                return (
                  <div className="flex items-center justify-between pt-3">
                    <p className="text-xs text-muted-foreground">
