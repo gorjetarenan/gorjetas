@@ -159,7 +159,7 @@ const Index = () => {
               <p className="text-xs font-semibold text-foreground/90 flex items-center gap-1.5">
                 📜 Regras do Sorteio
               </p>
-              <ScrollArea className="max-h-[150px] pr-2">
+              <ScrollArea className="max-h-[300px] pr-2">
                 <div className="whitespace-pre-line text-xs text-foreground/70 leading-relaxed">
                   {config.raffleRules}
                 </div>
