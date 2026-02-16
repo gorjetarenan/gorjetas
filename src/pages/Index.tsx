@@ -104,6 +104,28 @@ const Index = () => {
     );
   }
 
+  if (config.tipsDisabled) {
+    return (
+      <div className="flex min-h-[100dvh] flex-col items-center justify-center px-4" style={backgroundStyle()}>
+        <div className="glass-card w-full max-w-md p-6 text-center sm:p-8">
+          <div className="mb-4 text-5xl animate-float">🚫</div>
+          <p className="mb-6 text-base font-semibold text-foreground sm:text-lg">{config.tipsDisabledMessage}</p>
+          {config.tipsDisabledCtaLink && (
+            <a
+              href={config.tipsDisabledCtaLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full rounded-xl py-3.5 text-center font-bold transition-all hover:brightness-110 active:scale-[0.98] sm:py-4"
+              style={{ backgroundColor: config.ctaButtonColor, color: config.ctaButtonTextColor }}
+            >
+              {config.tipsDisabledCtaText}
+            </a>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (submitted) {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center px-4" style={backgroundStyle()}>
