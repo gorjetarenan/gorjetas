@@ -24,6 +24,8 @@ export interface PageConfig {
   emailFromName: string;
   emailSubject: string;
   emailBody: string;
+  accessPasswordEnabled: boolean;
+  accessPassword: string;
 }
 
 export interface FormField {
@@ -78,4 +80,6 @@ export const defaultConfig: PageConfig = {
   emailFromName: 'Gorjetas',
   emailSubject: '🎉 Parabéns, {{fullName}}! Você foi sorteado!',
   emailBody: 'Olá {{fullName}},\n\nParabéns! Você foi sorteado no nosso sistema de gorjetas!\n\nSeu ID de conta: {{accountId}}\nData do sorteio: {{date}}\n\nEntre em contato conosco para resgatar seu prêmio.\n\nAbraços,\nEquipe Gorjetas',
+  accessPasswordEnabled: false,
+  accessPassword: '',
 };
