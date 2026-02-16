@@ -26,6 +26,11 @@ export interface PageConfig {
   emailBody: string;
   accessPasswordEnabled: boolean;
   accessPassword: string;
+  accessGateTitle: string;
+  accessGateDescription: string;
+  accessGatePlaceholder: string;
+  accessGateButtonText: string;
+  accessGateErrorText: string;
 }
 
 export interface FormField {
@@ -82,4 +87,9 @@ export const defaultConfig: PageConfig = {
   emailBody: 'Olá {{fullName}},\n\nParabéns! Você foi sorteado no nosso sistema de gorjetas!\n\nSeu ID de conta: {{accountId}}\nData do sorteio: {{date}}\n\nEntre em contato conosco para resgatar seu prêmio.\n\nAbraços,\nEquipe Gorjetas',
   accessPasswordEnabled: false,
   accessPassword: '',
+  accessGateTitle: 'Acesso Restrito',
+  accessGateDescription: 'Digite a palavra-chave para acessar a página',
+  accessGatePlaceholder: 'Palavra-chave',
+  accessGateButtonText: 'Entrar',
+  accessGateErrorText: 'Palavra-chave incorreta',
 };

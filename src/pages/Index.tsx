@@ -93,6 +93,11 @@ const Index = () => {
       <div className="flex min-h-[100dvh] items-center justify-center" style={backgroundStyle()}>
         <AccessGate
           correctPassword={config.accessPassword}
+          title={config.accessGateTitle}
+          description={config.accessGateDescription}
+          placeholder={config.accessGatePlaceholder}
+          buttonText={config.accessGateButtonText}
+          errorText={config.accessGateErrorText}
           onSuccess={() => setAccessGranted(true)}
         />
       </div>

@@ -12,10 +12,15 @@ import { Lock } from 'lucide-react';
 
 interface Props {
   correctPassword: string;
+  title?: string;
+  description?: string;
+  placeholder?: string;
+  buttonText?: string;
+  errorText?: string;
   onSuccess: () => void;
 }
 
-const AccessGate = ({ correctPassword, onSuccess }: Props) => {
+const AccessGate = ({ correctPassword, onSuccess, title = 'Acesso Restrito', description = 'Digite a palavra-chave para acessar a página', placeholder = 'Palavra-chave', buttonText = 'Entrar', errorText = 'Palavra-chave incorreta' }: Props) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
 
@@ -41,16 +46,16 @@ const AccessGate = ({ correctPassword, onSuccess }: Props) => {
           <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
             <Lock className="h-7 w-7 text-primary" />
           </div>
-          <DialogTitle className="text-xl">Acesso Restrito</DialogTitle>
+          <DialogTitle className="text-xl">{title}</DialogTitle>
           <DialogDescription>
-            Digite a palavra-chave para acessar a página
+            {description}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <Input
             type="password"
-            placeholder="Palavra-chave"
+            placeholder={placeholder}
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
@@ -61,11 +66,11 @@ const AccessGate = ({ correctPassword, onSuccess }: Props) => {
           />
           {error && (
             <p className="text-sm text-destructive text-center animate-in fade-in">
-              Palavra-chave incorreta
+              {errorText}
             </p>
           )}
           <Button type="submit" className="w-full">
-            Entrar
+            {buttonText}
           </Button>
         </form>
       </DialogContent>

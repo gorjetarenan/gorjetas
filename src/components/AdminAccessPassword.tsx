@@ -29,14 +29,56 @@ const AdminAccessPassword = ({ config, onUpdate }: Props) => {
         </div>
 
         {config.accessPasswordEnabled && (
-          <div className="space-y-2">
-            <Label>Palavra-chave</Label>
-            <Input
-              type="text"
-              value={config.accessPassword}
-              onChange={(e) => onUpdate({ accessPassword: e.target.value })}
-              placeholder="Digite a palavra-chave..."
-            />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Palavra-chave</Label>
+              <Input
+                type="text"
+                value={config.accessPassword}
+                onChange={(e) => onUpdate({ accessPassword: e.target.value })}
+                placeholder="Digite a palavra-chave..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Título do popup</Label>
+              <Input
+                value={config.accessGateTitle}
+                onChange={(e) => onUpdate({ accessGateTitle: e.target.value })}
+                placeholder="Acesso Restrito"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Descrição</Label>
+              <Input
+                value={config.accessGateDescription}
+                onChange={(e) => onUpdate({ accessGateDescription: e.target.value })}
+                placeholder="Digite a palavra-chave para acessar a página"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Placeholder do campo</Label>
+              <Input
+                value={config.accessGatePlaceholder}
+                onChange={(e) => onUpdate({ accessGatePlaceholder: e.target.value })}
+                placeholder="Palavra-chave"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Texto do botão</Label>
+              <Input
+                value={config.accessGateButtonText}
+                onChange={(e) => onUpdate({ accessGateButtonText: e.target.value })}
+                placeholder="Entrar"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Mensagem de erro</Label>
+              <Input
+                value={config.accessGateErrorText}
+                onChange={(e) => onUpdate({ accessGateErrorText: e.target.value })}
+                placeholder="Palavra-chave incorreta"
+              />
+            </div>
             <p className="text-xs text-muted-foreground">
               Os visitantes precisarão digitar esta palavra-chave para acessar a página.
             </p>
