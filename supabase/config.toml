@@ -3,5 +3,5 @@ project_id = "wmctdikdjfqukyyjmxcm"
 [functions.send-winner-email]
 verify_jwt = false
 
-[functions.postback]
+[functions.validate-player]
 verify_jwt = false
