@@ -18,7 +18,7 @@ const AdminPostback = ({ config, onUpdate }: Props) => {
   const [copied, setCopied] = useState(false);
   const [validatedCount, setValidatedCount] = useState(0);
 
-  const postbackUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/postback?player_id={player_id}&currency={currency}&registration_date={registration_date}&type={type}`;
+  const postbackUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/postback`;
 
   useEffect(() => {
     const fetchCount = async () => {
