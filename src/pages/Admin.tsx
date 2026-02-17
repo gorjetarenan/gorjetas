@@ -47,7 +47,7 @@ const Admin = () => {
               <Button variant="outline" size="sm" onClick={() => setView('settings')} className="text-xs md:text-sm">
                 <Settings className="mr-1 h-3.5 w-3.5 md:mr-2 md:h-4 md:w-4" /> Configurações
               </Button>
-              <Button variant="ghost" size="sm" onClick={signOut} className="text-xs md:text-sm text-destructive">
+              <Button variant="destructive" size="sm" onClick={signOut} className="text-xs md:text-sm">
                 <LogOut className="mr-1 h-3.5 w-3.5 md:mr-2 md:h-4 md:w-4" /> Sair
               </Button>
             </div>
