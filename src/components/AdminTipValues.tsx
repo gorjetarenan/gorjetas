@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { DollarSign, Plus, X } from 'lucide-react';
+import { DollarSign, Plus, X, Wallet, Tag } from 'lucide-react';
 
 interface Props {
   config: PageConfig;
@@ -50,16 +50,56 @@ const AdminTipValues = ({ config, onUpdate }: Props) => {
             Defina os valores disponíveis para seleção ao sortear um ganhador. O valor escolhido será salvo junto ao sorteio.
           </p>
 
-          <div className="flex gap-2">
+          {/* Weekly Budget */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <Wallet className="h-4 w-4 text-muted-foreground" />
+              Valor Semanal Disponível (R$)
+            </Label>
             <Input
-              value={newValue}
-              onChange={(e) => setNewValue(e.target.value)}
-              placeholder="Ex: R$ 25,00"
-              onKeyDown={(e) => e.key === 'Enter' && addValue()}
+              type="number"
+              min={0}
+              value={config.weeklyTipBudget}
+              onChange={(e) => onUpdate({ weeklyTipBudget: parseFloat(e.target.value) || 0 })}
+              placeholder="Ex: 500"
             />
-            <Button onClick={addValue} size="sm" disabled={!newValue.trim()}>
-              <Plus className="h-4 w-4 mr-1" /> Adicionar
-            </Button>
+            <p className="text-xs text-muted-foreground">
+              Orçamento total disponível por semana para distribuição de gorjetas.
+            </p>
+          </div>
+
+          {/* Default Tip Value */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <Tag className="h-4 w-4 text-muted-foreground" />
+              Valor Padrão da Gorjeta (R$)
+            </Label>
+            <Input
+              type="number"
+              min={0}
+              value={config.defaultTipValue}
+              onChange={(e) => onUpdate({ defaultTipValue: parseFloat(e.target.value) || 0 })}
+              placeholder="Ex: 10"
+            />
+            <p className="text-xs text-muted-foreground">
+              Valor base usado para calcular a quantidade de gorjetas disponíveis na semana (Semanal ÷ Padrão).
+            </p>
+          </div>
+
+          {/* Tip Values List */}
+          <div className="space-y-2">
+            <Label>Valores para Seleção</Label>
+            <div className="flex gap-2">
+              <Input
+                value={newValue}
+                onChange={(e) => setNewValue(e.target.value)}
+                placeholder="Ex: R$ 25,00"
+                onKeyDown={(e) => e.key === 'Enter' && addValue()}
+              />
+              <Button onClick={addValue} size="sm" disabled={!newValue.trim()}>
+                <Plus className="h-4 w-4 mr-1" /> Adicionar
+              </Button>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -75,6 +115,17 @@ const AdminTipValues = ({ config, onUpdate }: Props) => {
               <p className="text-sm text-muted-foreground italic">Nenhum valor cadastrado</p>
             )}
           </div>
+
+          {/* Preview */}
+          {config.weeklyTipBudget > 0 && config.defaultTipValue > 0 && (
+            <div className="rounded-lg border border-border/50 bg-muted/30 p-4">
+              <p className="text-sm text-muted-foreground">
+                Com <strong className="text-foreground">R$ {config.weeklyTipBudget.toFixed(2)}</strong> semanais e valor padrão de{' '}
+                <strong className="text-foreground">R$ {config.defaultTipValue.toFixed(2)}</strong>, você tem aproximadamente{' '}
+                <strong className="text-foreground">{Math.floor(config.weeklyTipBudget / config.defaultTipValue)}</strong> gorjetas disponíveis por semana.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
