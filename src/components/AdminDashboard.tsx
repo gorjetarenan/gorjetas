@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Trophy, TrendingUp, Calendar, DollarSign, BarChart3, UserCheck, UserX } from 'lucide-react';
+import { Users, Trophy, TrendingUp, Calendar, DollarSign, BarChart3, UserCheck, UserX, ChevronDown, ChevronUp } from 'lucide-react';
 import { RaffleWin, Submission } from '@/types/config';
 
 interface Props {
@@ -19,6 +19,7 @@ const periodLabels: Record<Period, string> = {
 
 const AdminDashboard = ({ submissions, wins }: Props) => {
   const [period, setPeriod] = useState<Period>('week');
+  const [showDuplicates, setShowDuplicates] = useState(false);
 
   const stats = useMemo(() => {
     const now = new Date();
@@ -61,13 +62,18 @@ const AdminDashboard = ({ submissions, wins }: Props) => {
     });
 
     // Submission frequency by accountId (from current submissions)
-    const accountCounts: Record<string, number> = {};
+    const accountCounts: Record<string, { count: number; name: string; accountId: string }> = {};
     submissions.forEach(s => {
       const accId = s.data?.accountId || s.id;
-      accountCounts[accId] = (accountCounts[accId] || 0) + 1;
+      const name = s.data?.fullName || '—';
+      if (!accountCounts[accId]) accountCounts[accId] = { count: 0, name, accountId: accId };
+      accountCounts[accId].count++;
     });
-    const singleSubmission = Object.values(accountCounts).filter(c => c === 1).length;
-    const multipleSubmissions = Object.values(accountCounts).filter(c => c > 1).length;
+    const singleSubmission = Object.values(accountCounts).filter(c => c.count === 1).length;
+    const duplicateEntries = Object.values(accountCounts)
+      .filter(c => c.count > 1)
+      .sort((a, b) => b.count - a.count);
+    const multipleSubmissions = duplicateEntries.length;
 
     return {
       currentSubmissions: submissions.length,
@@ -82,6 +88,7 @@ const AdminDashboard = ({ submissions, wins }: Props) => {
       allTimeWins: wins.length,
       singleSubmission,
       multipleSubmissions,
+      duplicateEntries,
     };
   }, [submissions, wins, period]);
 
@@ -194,6 +201,41 @@ const AdminDashboard = ({ submissions, wins }: Props) => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Duplicate details expandable */}
+      {stats.duplicateEntries.length > 0 && (
+        <Card className="bg-[hsl(220,20%,12%)] border-[hsl(220,15%,20%)]">
+          <button
+            onClick={() => setShowDuplicates(!showDuplicates)}
+            className="w-full flex items-center justify-between px-4 py-3 text-left"
+          >
+            <span className="text-sm font-semibold text-[hsl(220,10%,60%)] flex items-center gap-2">
+              <UserX className="h-4 w-4 text-[hsl(0,60%,60%)]" />
+              Detalhes de duplicados ({stats.duplicateEntries.length})
+            </span>
+            {showDuplicates ? (
+              <ChevronUp className="h-4 w-4 text-[hsl(220,10%,50%)]" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-[hsl(220,10%,50%)]" />
+            )}
+          </button>
+          {showDuplicates && (
+            <CardContent className="px-4 pb-4 pt-0">
+              <div className="space-y-2 max-h-[250px] overflow-y-auto scrollbar-thin">
+                {stats.duplicateEntries.map(({ name, accountId, count }) => (
+                  <div key={accountId} className="flex items-center justify-between rounded-lg bg-[hsl(220,18%,14%)] px-3 py-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-white truncate">{name}</p>
+                      <p className="text-xs text-[hsl(220,10%,45%)] truncate">ID: {accountId}</p>
+                    </div>
+                    <span className="text-xs font-semibold text-[hsl(0,60%,60%)] shrink-0 ml-2">{count}x</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          )}
+        </Card>
+      )}
 
       {/* All-time stats */}
       <Card className="bg-[hsl(220,20%,12%)] border-[hsl(220,15%,20%)]">
