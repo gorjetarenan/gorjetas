@@ -123,12 +123,14 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
 
   const enabledFields = config.fields.filter(f => f.enabled);
 
+  const sortedSubmissions = [...sub.submissions].reverse();
+
   const filteredSubmissions = searchQuery.trim()
-    ? sub.submissions.filter(s => {
+    ? sortedSubmissions.filter(s => {
         const q = searchQuery.toLowerCase();
         return s.id.toLowerCase().includes(q) || Object.values(s.data).some(v => String(v).toLowerCase().includes(q));
       })
-    : sub.submissions;
+    : sortedSubmissions;
 
   const todayWins = sub.wins.filter(w => {
     const d = new Date(w.date);
