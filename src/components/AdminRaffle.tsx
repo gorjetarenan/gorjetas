@@ -213,9 +213,8 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
             <div className="grid grid-cols-2 gap-2">
               {filteredSubmissions.map(s => {
                 const firstField = enabledFields[0];
-                const secondField = enabledFields[1];
                 const name = firstField ? (s.data[firstField.id] || '—') : '—';
-                const secondary = secondField ? (s.data[secondField.id] || '') : s.id.slice(0, 8);
+                const secondary = s.id.slice(0, 10) + '...';
                 const isSelected = selectedIds.includes(s.id);
                 const eligible = sub.canWin(s.data, config);
 
