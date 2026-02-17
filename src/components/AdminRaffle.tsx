@@ -182,8 +182,8 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
                  <thead className="bg-secondary">
                    <tr>
                      <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">#</th>
-                     {filteredSubmissions[0] && Object.keys(filteredSubmissions[0].data).map(key => (
-                       <th key={key} className="px-3 py-2 text-left text-xs font-medium text-muted-foreground capitalize">{key}</th>
+                     {config.fields.filter(f => f.enabled).map(field => (
+                       <th key={field.id} className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">{field.label}</th>
                      ))}
                      <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Data</th>
                      <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">Ações</th>
@@ -195,22 +195,23 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
                       const safePage = Math.min(currentPage, totalPages || 1);
                       const start = (safePage - 1) * itemsPerPage;
                       const paged = filteredSubmissions.slice(start, start + itemsPerPage);
+                      const enabledFields = config.fields.filter(f => f.enabled);
                      return paged.map((s, i) => (
                        <tr key={s.id} className="border-t border-border/30 transition-colors hover:bg-muted/30">
                          <td className="px-3 py-2 text-muted-foreground">{start + i + 1}</td>
                          {editingId === s.id ? (
-                           Object.entries(s.data).map(([key]) => (
-                             <td key={key} className="px-3 py-2">
+                           enabledFields.map(field => (
+                             <td key={field.id} className="px-3 py-2">
                                <Input
-                                 value={editData[key] || ''}
-                                 onChange={e => setEditData(prev => ({ ...prev, [key]: e.target.value }))}
+                                 value={editData[field.id] || ''}
+                                 onChange={e => setEditData(prev => ({ ...prev, [field.id]: e.target.value }))}
                                  className="h-7 text-xs"
                                />
                              </td>
                            ))
                          ) : (
-                           Object.values(s.data).map((val, vi) => (
-                             <td key={vi} className="px-3 py-2 text-foreground">{val}</td>
+                           enabledFields.map(field => (
+                             <td key={field.id} className="px-3 py-2 text-foreground">{s.data[field.id] || '—'}</td>
                            ))
                          )}
                          <td className="px-3 py-2 text-muted-foreground text-xs">
