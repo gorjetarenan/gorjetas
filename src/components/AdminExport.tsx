@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Submission, RaffleWin } from '@/types/config';
+import { Submission, RaffleWin, PageConfig } from '@/types/config';
 import { Download, FileText, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
@@ -56,15 +56,23 @@ const AdminExport = ({ submissions: sub }: Props) => {
 
   const getWinHeaders = () => {
     const dataKeys = filteredWins.length > 0 ? Object.keys(filteredWins[0].submissionData) : [];
-    return ['#', 'Data do Sorteio', ...dataKeys];
+    const headers = ['#', 'Data do Sorteio', ...dataKeys];
+    if (filteredWins.some(w => w.tipValue)) headers.push('Valor Gorjeta');
+    return headers;
   };
 
-  const getWinRows = () =>
-    filteredWins.map((w, i) => [
-      String(i + 1),
-      new Date(w.date).toLocaleString('pt-BR'),
-      ...Object.values(w.submissionData),
-    ]);
+  const getWinRows = () => {
+    const hasTip = filteredWins.some(w => w.tipValue);
+    return filteredWins.map((w, i) => {
+      const row = [
+        String(i + 1),
+        new Date(w.date).toLocaleString('pt-BR'),
+        ...Object.values(w.submissionData),
+      ];
+      if (hasTip) row.push(w.tipValue || '—');
+      return row;
+    });
+  };
 
   const getSubHeaders = () => {
     const allKeys = new Set<string>();

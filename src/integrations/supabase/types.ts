@@ -62,18 +62,21 @@ export type Database = {
           id: string
           submission_data: Json
           submission_id: string
+          tip_value: string | null
         }
         Insert: {
           date?: string
           id?: string
           submission_data?: Json
           submission_id: string
+          tip_value?: string | null
         }
         Update: {
           date?: string
           id?: string
           submission_data?: Json
           submission_id?: string
+          tip_value?: string | null
         }
         Relationships: [
           {

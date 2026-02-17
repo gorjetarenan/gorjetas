@@ -16,7 +16,11 @@ const getAvailableVariables = (config: PageConfig) => {
   const fieldVars = config.fields
     .filter(f => f.enabled)
     .map(f => ({ name: `{{${f.id}}}`, description: f.label }));
-  return [...fieldVars, { name: '{{date}}', description: 'Data do sorteio' }];
+  const vars = [...fieldVars, { name: '{{date}}', description: 'Data do sorteio' }];
+  if (config.tipValuesEnabled) {
+    vars.push({ name: '{{tipValue}}', description: 'Valor da gorjeta' });
+  }
+  return vars;
 };
 
 const AdminEmail = ({ config, onUpdate }: Props) => {
