@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Trophy, TrendingUp, Calendar, DollarSign, BarChart3 } from 'lucide-react';
+import { Users, Trophy, TrendingUp, Calendar, DollarSign, BarChart3, UserCheck, UserX } from 'lucide-react';
 import { RaffleWin, Submission } from '@/types/config';
 
 interface Props {
@@ -60,6 +60,15 @@ const AdminDashboard = ({ submissions, wins }: Props) => {
       winsPerDay[d] = (winsPerDay[d] || 0) + 1;
     });
 
+    // Submission frequency by accountId (from current submissions)
+    const accountCounts: Record<string, number> = {};
+    submissions.forEach(s => {
+      const accId = s.data?.accountId || s.id;
+      accountCounts[accId] = (accountCounts[accId] || 0) + 1;
+    });
+    const singleSubmission = Object.values(accountCounts).filter(c => c === 1).length;
+    const multipleSubmissions = Object.values(accountCounts).filter(c => c > 1).length;
+
     return {
       currentSubmissions: submissions.length,
       totalWins: filteredWins.length,
@@ -71,6 +80,8 @@ const AdminDashboard = ({ submissions, wins }: Props) => {
       winsPerDay: Object.entries(winsPerDay).slice(-7),
       allTimeParticipants: allTimeParticipants.size,
       allTimeWins: wins.length,
+      singleSubmission,
+      multipleSubmissions,
     };
   }, [submissions, wins, period]);
 
@@ -147,6 +158,37 @@ const AdminDashboard = ({ submissions, wins }: Props) => {
               <div>
                 <p className="text-2xl font-bold text-white">{stats.avgWinsPerDay}</p>
                 <p className="text-xs text-[hsl(220,10%,50%)]">Média/dia</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Submission frequency */}
+      <div className="grid grid-cols-2 gap-3">
+        <Card className="bg-[hsl(220,20%,12%)] border-[hsl(220,15%,20%)]">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="rounded-xl bg-[hsl(170,50%,18%)] p-2.5">
+                <UserCheck className="h-5 w-5 text-[hsl(170,60%,55%)]" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-white">{stats.singleSubmission}</p>
+                <p className="text-xs text-[hsl(220,10%,50%)]">Cadastro único</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[hsl(220,20%,12%)] border-[hsl(220,15%,20%)]">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="rounded-xl bg-[hsl(0,50%,20%)] p-2.5">
+                <UserX className="h-5 w-5 text-[hsl(0,60%,60%)]" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-white">{stats.multipleSubmissions}</p>
+                <p className="text-xs text-[hsl(220,10%,50%)]">Cadastros duplicados</p>
               </div>
             </div>
           </CardContent>
