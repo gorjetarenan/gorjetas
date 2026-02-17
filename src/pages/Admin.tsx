@@ -46,22 +46,7 @@ const Admin = () => {
             </div>
           </div>
 
-          <Tabs defaultValue="raffle" className="w-full">
-            <ScrollArea className="w-full mb-4 md:mb-6">
-              <TabsList className="inline-flex w-max gap-1 p-1">
-                <TabsTrigger value="raffle" className="text-xs md:text-sm px-3">Sorteio</TabsTrigger>
-                <TabsTrigger value="dashboard" className="text-xs md:text-sm px-3">Dashboard</TabsTrigger>
-              </TabsList>
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
-
-            <TabsContent value="raffle" forceMount className="data-[state=inactive]:hidden">
-              <AdminRaffle config={config} submissions={submissionsHook} />
-            </TabsContent>
-            <TabsContent value="dashboard" forceMount className="data-[state=inactive]:hidden">
-              <AdminDashboard submissions={submissionsHook.submissions} wins={submissionsHook.wins} />
-            </TabsContent>
-          </Tabs>
+          <AdminRaffle config={config} submissions={submissionsHook} />
         </div>
       </div>
     );
@@ -93,6 +78,7 @@ const Admin = () => {
               <TabsTrigger value="appearance" className="text-xs md:text-sm px-3">Aparência</TabsTrigger>
               <TabsTrigger value="fields" className="text-xs md:text-sm px-3">Campos</TabsTrigger>
               <TabsTrigger value="texts" className="text-xs md:text-sm px-3">Textos</TabsTrigger>
+              <TabsTrigger value="dashboard" className="text-xs md:text-sm px-3">Dashboard</TabsTrigger>
               <TabsTrigger value="rules" className="text-xs md:text-sm px-3">Regras</TabsTrigger>
               <TabsTrigger value="banned" className="text-xs md:text-sm px-3">Banidos</TabsTrigger>
               <TabsTrigger value="email" className="text-xs md:text-sm px-3">Email</TabsTrigger>
@@ -112,6 +98,9 @@ const Admin = () => {
           </TabsContent>
           <TabsContent value="texts" forceMount className="data-[state=inactive]:hidden">
             <AdminTexts config={config} onUpdate={updateConfig} />
+          </TabsContent>
+          <TabsContent value="dashboard" forceMount className="data-[state=inactive]:hidden">
+            <AdminDashboard submissions={submissionsHook.submissions} wins={submissionsHook.wins} />
           </TabsContent>
           <TabsContent value="rules" forceMount className="data-[state=inactive]:hidden">
             <AdminRules config={config} onUpdate={updateConfig} />
