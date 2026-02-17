@@ -13,14 +13,59 @@ interface Props {
   onUpdate: (updates: Partial<PageConfig>) => void;
 }
 
+const formatCurrency = (value: string): string => {
+  const digits = value.replace(/\D/g, '');
+  if (!digits) return '';
+  const num = parseInt(digits, 10) / 100;
+  return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+const parseCurrency = (formatted: string): number => {
+  const clean = formatted.replace(/\./g, '').replace(',', '.');
+  return parseFloat(clean) || 0;
+};
+
+const CurrencyInput = ({ value, onChange, placeholder }: { value: number; onChange: (v: number) => void; placeholder?: string }) => {
+  const [display, setDisplay] = useState(value > 0 ? value.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/[^\d]/g, '');
+    if (!raw) { setDisplay(''); onChange(0); return; }
+    const formatted = formatCurrency(raw);
+    setDisplay(formatted);
+    onChange(parseCurrency(formatted));
+  };
+
+  return (
+    <div className="relative">
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">R$</span>
+      <Input
+        value={display}
+        onChange={handleChange}
+        placeholder={placeholder}
+        className="pl-10"
+        inputMode="numeric"
+      />
+    </div>
+  );
+};
+
 const AdminTipValues = ({ config, onUpdate }: Props) => {
-  const [newValue, setNewValue] = useState('');
+  const [newValueDisplay, setNewValueDisplay] = useState('');
+
+  const handleNewValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/[^\d]/g, '');
+    if (!raw) { setNewValueDisplay(''); return; }
+    setNewValueDisplay(formatCurrency(raw));
+  };
 
   const addValue = () => {
-    const v = newValue.trim();
-    if (!v || config.tipValues.includes(v)) return;
-    onUpdate({ tipValues: [...config.tipValues, v] });
-    setNewValue('');
+    const v = newValueDisplay.trim();
+    if (!v) return;
+    const formatted = `R$ ${v}`;
+    if (config.tipValues.includes(formatted)) return;
+    onUpdate({ tipValues: [...config.tipValues, formatted] });
+    setNewValueDisplay('');
   };
 
   const removeValue = (val: string) => {
@@ -54,14 +99,12 @@ const AdminTipValues = ({ config, onUpdate }: Props) => {
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <Wallet className="h-4 w-4 text-muted-foreground" />
-              Valor Semanal Disponível (R$)
+              Valor Semanal Disponível
             </Label>
-            <Input
-              type="number"
-              min={0}
+            <CurrencyInput
               value={config.weeklyTipBudget}
-              onChange={(e) => onUpdate({ weeklyTipBudget: parseFloat(e.target.value) || 0 })}
-              placeholder="Ex: 500"
+              onChange={(v) => onUpdate({ weeklyTipBudget: v })}
+              placeholder="500,00"
             />
             <p className="text-xs text-muted-foreground">
               Orçamento total disponível por semana para distribuição de gorjetas.
@@ -72,14 +115,12 @@ const AdminTipValues = ({ config, onUpdate }: Props) => {
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <Tag className="h-4 w-4 text-muted-foreground" />
-              Valor Padrão da Gorjeta (R$)
+              Valor Padrão da Gorjeta
             </Label>
-            <Input
-              type="number"
-              min={0}
+            <CurrencyInput
               value={config.defaultTipValue}
-              onChange={(e) => onUpdate({ defaultTipValue: parseFloat(e.target.value) || 0 })}
-              placeholder="Ex: 10"
+              onChange={(v) => onUpdate({ defaultTipValue: v })}
+              placeholder="10,00"
             />
             <p className="text-xs text-muted-foreground">
               Valor base usado para calcular a quantidade de gorjetas disponíveis na semana (Semanal ÷ Padrão).
@@ -90,13 +131,18 @@ const AdminTipValues = ({ config, onUpdate }: Props) => {
           <div className="space-y-2">
             <Label>Valores para Seleção</Label>
             <div className="flex gap-2">
-              <Input
-                value={newValue}
-                onChange={(e) => setNewValue(e.target.value)}
-                placeholder="Ex: R$ 25,00"
-                onKeyDown={(e) => e.key === 'Enter' && addValue()}
-              />
-              <Button onClick={addValue} size="sm" disabled={!newValue.trim()}>
+              <div className="relative flex-1">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">R$</span>
+                <Input
+                  value={newValueDisplay}
+                  onChange={handleNewValueChange}
+                  placeholder="25,00"
+                  className="pl-10"
+                  inputMode="numeric"
+                  onKeyDown={(e) => e.key === 'Enter' && addValue()}
+                />
+              </div>
+              <Button onClick={addValue} size="sm" disabled={!newValueDisplay.trim()}>
                 <Plus className="h-4 w-4 mr-1" /> Adicionar
               </Button>
             </div>
@@ -120,8 +166,8 @@ const AdminTipValues = ({ config, onUpdate }: Props) => {
           {config.weeklyTipBudget > 0 && config.defaultTipValue > 0 && (
             <div className="rounded-lg border border-border/50 bg-muted/30 p-4">
               <p className="text-sm text-muted-foreground">
-                Com <strong className="text-foreground">R$ {config.weeklyTipBudget.toFixed(2)}</strong> semanais e valor padrão de{' '}
-                <strong className="text-foreground">R$ {config.defaultTipValue.toFixed(2)}</strong>, você tem aproximadamente{' '}
+                Com <strong className="text-foreground">R$ {config.weeklyTipBudget.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> semanais e valor padrão de{' '}
+                <strong className="text-foreground">R$ {config.defaultTipValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>, você tem aproximadamente{' '}
                 <strong className="text-foreground">{Math.floor(config.weeklyTipBudget / config.defaultTipValue)}</strong> gorjetas disponíveis por semana.
               </p>
             </div>
