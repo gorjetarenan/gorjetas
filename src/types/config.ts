@@ -40,6 +40,7 @@ export interface PageConfig {
   tipValues: string[];
   weeklyTipBudget: number;
   defaultTipValue: number;
+  raffleBackgroundImage: string;
 }
 
 export interface FormField {
@@ -112,4 +113,5 @@ export const defaultConfig: PageConfig = {
   tipValues: ['R$ 5,00', 'R$ 10,00', 'R$ 20,00', 'R$ 50,00', 'R$ 100,00'],
   weeklyTipBudget: 500,
   defaultTipValue: 10,
+  raffleBackgroundImage: '',
 };
