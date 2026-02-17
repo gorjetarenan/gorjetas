@@ -136,6 +136,12 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
     return d.toDateString() === now.toDateString();
   }).length;
 
+  // Daily quota derived from weekly budget / 7
+  const dailyQuota = config.tipValuesEnabled && config.defaultTipValue > 0 && config.weeklyTipBudget > 0
+    ? Math.floor(Math.floor((config.weeklyTipBudget || 0) / config.defaultTipValue) / 7)
+    : 0;
+  const showDailyQuota = dailyQuota > 0;
+
   // Weekly tip budget tracking
   const now = new Date();
   const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
@@ -190,13 +196,13 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
               Gorjetas enviadas hoje
             </span>
             <span className="inline-flex items-center rounded-full bg-[hsl(140,60%,20%)] border border-[hsl(140,50%,30%)] px-2.5 py-0.5 text-xs font-bold text-[hsl(140,60%,55%)]">
-              {todayWins}/{config.maxDailyWins || '∞'}
+              {todayWins}/{showDailyQuota ? dailyQuota : (config.maxDailyWins || '∞')}
             </span>
           </div>
           <div className="h-1.5 rounded-full bg-[hsl(220,15%,18%)] mb-4">
             <div
               className="h-full rounded-full bg-[hsl(140,60%,45%)] transition-all"
-              style={{ width: `${Math.min(100, (todayWins / (config.maxDailyWins || 100)) * 100)}%` }}
+              style={{ width: `${Math.min(100, (todayWins / (showDailyQuota ? dailyQuota : (config.maxDailyWins || 100))) * 100)}%` }}
             />
           </div>
 
