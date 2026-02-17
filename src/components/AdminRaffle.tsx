@@ -157,7 +157,7 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
   return (
     <div className="space-y-4">
       {/* Main Card */}
-      <div className="rounded-2xl bg-[hsl(220,20%,12%)] border border-[hsl(220,15%,20%)] overflow-hidden">
+      <div className="rounded-2xl bg-[hsl(220,20%,12%,0.85)] backdrop-blur-sm border border-[hsl(220,15%,20%)] overflow-hidden">
         {/* Header */}
         <div className="px-5 pt-5 pb-3">
           <div className="flex items-center justify-between mb-3">
