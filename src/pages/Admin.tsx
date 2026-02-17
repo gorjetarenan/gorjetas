@@ -40,7 +40,7 @@ const Admin = () => {
           : { backgroundColor: 'hsl(var(--background))' }
         }
       >
-        <div className="mx-auto max-w-5xl">
+        <div className="mx-auto max-w-3xl">
           <div className="mb-4 flex items-center justify-between md:mb-6">
             <h1 className="text-lg font-bold text-foreground md:text-2xl">Sorteio</h1>
             <div className="flex items-center gap-2">
