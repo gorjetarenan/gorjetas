@@ -38,6 +38,8 @@ export interface PageConfig {
   tipsDisabledCtaLink: string;
   tipValuesEnabled: boolean;
   tipValues: string[];
+  weeklyTipBudget: number;
+  defaultTipValue: number;
 }
 
 export interface FormField {
@@ -108,4 +110,6 @@ export const defaultConfig: PageConfig = {
   tipsDisabledCtaLink: 'https://example.com',
   tipValuesEnabled: false,
   tipValues: ['R$ 5,00', 'R$ 10,00', 'R$ 20,00', 'R$ 50,00', 'R$ 100,00'],
+  weeklyTipBudget: 500,
+  defaultTipValue: 10,
 };

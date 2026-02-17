@@ -136,6 +136,16 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
     return d.toDateString() === now.toDateString();
   }).length;
 
+  // Weekly tip budget tracking
+  const now = new Date();
+  const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+  const weeklyWins = sub.wins.filter(w => new Date(w.date) >= startOfWeek);
+  const weeklyTipsUsed = weeklyWins.length;
+  const maxWeeklyTips = config.tipValuesEnabled && config.defaultTipValue > 0
+    ? Math.floor((config.weeklyTipBudget || 0) / config.defaultTipValue)
+    : 0;
+  const showWeeklyBudget = config.tipValuesEnabled && config.defaultTipValue > 0 && config.weeklyTipBudget > 0;
+
   return (
     <div className="space-y-4">
       {/* Main Card */}
@@ -152,7 +162,28 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
             </div>
           </div>
 
-          {/* Stats row */}
+          {/* Weekly budget indicator */}
+          {showWeeklyBudget && (
+            <>
+              <div className="flex items-center justify-between mb-1">
+                <span className="flex items-center gap-1.5 text-sm text-[hsl(45,80%,55%)]">
+                  <DollarSign className="h-3.5 w-3.5" />
+                  Gorjetas da semana
+                </span>
+                <span className="inline-flex items-center rounded-full bg-[hsl(45,80%,20%)] border border-[hsl(45,70%,30%)] px-2.5 py-0.5 text-xs font-bold text-[hsl(45,80%,55%)]">
+                  {weeklyTipsUsed}/{maxWeeklyTips}
+                </span>
+              </div>
+              <div className="h-1.5 rounded-full bg-[hsl(220,15%,18%)] mb-3">
+                <div
+                  className={`h-full rounded-full transition-all ${weeklyTipsUsed >= maxWeeklyTips ? 'bg-[hsl(0,60%,50%)]' : 'bg-[hsl(45,80%,50%)]'}`}
+                  style={{ width: `${Math.min(100, (weeklyTipsUsed / (maxWeeklyTips || 1)) * 100)}%` }}
+                />
+              </div>
+            </>
+          )}
+
+          {/* Daily stats row */}
           <div className="flex items-center justify-between mb-1">
             <span className="flex items-center gap-1.5 text-sm text-[hsl(140,60%,55%)]">
               <DollarSign className="h-3.5 w-3.5" />
