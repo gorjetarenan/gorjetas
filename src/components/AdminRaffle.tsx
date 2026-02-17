@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { PageConfig, Submission, RaffleWin } from '@/types/config';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Shuffle, Users, Trophy, Trash2, Dices, Pencil, X, Check, Search, DollarSign, Crown, ShieldCheck } from 'lucide-react';
+import { Users, Trophy, Trash2, Pencil, X, Check, Search, DollarSign, Crown, ShieldCheck } from 'lucide-react';
 
 interface SubmissionsHook {
   submissions: Submission[];
@@ -39,7 +39,7 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Record<string, string>>({});
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [mode, setMode] = useState<'random' | 'manual'>('random');
+  
   const spinIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -188,12 +188,7 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
                 <Trash2 className="mr-1 h-3.5 w-3.5" /> Zerar
               </Button>
             )}
-            <button
-              onClick={() => setMode(mode === 'random' ? 'manual' : 'random')}
-              className="h-8 w-8 rounded-lg bg-[hsl(220,15%,18%)] border border-[hsl(220,15%,25%)] flex items-center justify-center text-[hsl(220,10%,60%)] hover:text-white transition-colors"
-            >
-              <Shuffle className="h-4 w-4" />
-            </button>
+          
           </div>
 
           {/* Search */}
@@ -227,12 +222,9 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
                 return (
                   <div
                     key={s.id}
-                    onClick={() => {
-                      if (mode === 'manual' && eligible) toggleSelect(s.id);
-                    }}
+                    onClick={() => {}}
                     className={`
                       relative flex items-center gap-2 rounded-xl border p-3 transition-all
-                      ${mode === 'manual' ? (eligible ? 'cursor-pointer' : 'cursor-not-allowed opacity-40') : ''}
                       ${isSelected
                         ? 'border-[hsl(45,80%,50%)] bg-[hsl(45,80%,50%,0.08)]'
                         : 'border-[hsl(220,15%,20%)] bg-[hsl(220,18%,14%)] hover:border-[hsl(220,15%,28%)]'}
@@ -278,15 +270,14 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
                           <p className="text-xs text-[hsl(220,10%,50%)] truncate">{secondary}</p>
                         </div>
                         <div className="flex items-center gap-0.5 shrink-0">
-                          {mode === 'manual' && (
-                            <Checkbox
-                              checked={isSelected}
-                              onCheckedChange={() => toggleSelect(s.id)}
-                              disabled={!eligible}
-                              className="mr-1 border-[hsl(220,15%,30%)] data-[state=checked]:bg-[hsl(45,80%,50%)] data-[state=checked]:border-[hsl(45,80%,50%)]"
-                            />
-                          )}
-                          <DollarSign className="h-4 w-4 text-[hsl(140,50%,40%)]" />
+                          <button
+                            onClick={e => { e.stopPropagation(); if (eligible) toggleSelect(s.id); }}
+                            disabled={!eligible}
+                            className={`p-1 rounded transition-colors ${isSelected ? 'text-[hsl(140,60%,55%)]' : 'text-[hsl(140,50%,40%)] hover:text-[hsl(140,60%,55%)]'} ${!eligible ? 'opacity-40 cursor-not-allowed' : ''}`}
+                            title={eligible ? (isSelected ? 'Remover da seleção' : 'Selecionar para sorteio') : 'Limite atingido'}
+                          >
+                            <DollarSign className="h-4 w-4" />
+                          </button>
                           <button
                             onClick={e => { e.stopPropagation(); setEditingId(s.id); setEditData({ ...s.data }); }}
                             className="p-1 rounded text-[hsl(220,10%,40%)] hover:text-white transition-colors"
@@ -311,7 +302,16 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
 
         {/* Draw Button */}
         <div className="px-5 pb-5 pt-3">
-          {mode === 'random' ? (
+          {selectedIds.length > 0 ? (
+            <Button
+              onClick={handleManualDraw}
+              disabled={isSpinning}
+              className="w-full h-14 rounded-2xl text-base font-bold bg-gradient-to-r from-[hsl(35,90%,50%)] to-[hsl(45,95%,55%)] hover:from-[hsl(35,90%,45%)] hover:to-[hsl(45,95%,50%)] text-[hsl(30,50%,10%)] shadow-lg shadow-[hsl(40,80%,40%,0.3)] border-0"
+            >
+              <Trophy className="mr-2 h-5 w-5" />
+              {isSpinning ? 'SORTEANDO...' : `SORTEAR SELECIONADOS (${selectedIds.length})`}
+            </Button>
+          ) : (
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <label className="text-xs text-[hsl(220,10%,55%)]">Qtd:</label>
@@ -333,15 +333,6 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
                 {isSpinning ? 'SORTEANDO...' : 'SORTEAR ALEATÓRIO'}
               </Button>
             </div>
-          ) : (
-            <Button
-              onClick={handleManualDraw}
-              disabled={selectedIds.length === 0 || isSpinning}
-              className="w-full h-14 rounded-2xl text-base font-bold bg-gradient-to-r from-[hsl(35,90%,50%)] to-[hsl(45,95%,55%)] hover:from-[hsl(35,90%,45%)] hover:to-[hsl(45,95%,50%)] text-[hsl(30,50%,10%)] shadow-lg shadow-[hsl(40,80%,40%,0.3)] border-0"
-            >
-              <Trophy className="mr-2 h-5 w-5" />
-              {isSpinning ? 'SORTEANDO...' : `SORTEAR SELECIONADOS (${selectedIds.length})`}
-            </Button>
           )}
 
           {/* Footer */}
