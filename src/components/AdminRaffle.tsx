@@ -177,12 +177,12 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
               ) : (
                 <Button
                   variant="ghost"
-                  size="icon"
+                  size="sm"
                   onClick={handleClearSubmissions}
                   disabled={sub.submissions.length === 0}
-                  className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 px-2"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="mr-1 h-3.5 w-3.5" /> Zerar
                 </Button>
               )}
             </div>
