@@ -204,7 +204,7 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
         </div>
 
         {/* Participants Grid */}
-        <div className="px-5 pb-3 max-h-[400px] overflow-y-auto scrollbar-thin">
+        <div className="px-5 pb-3 max-h-[280px] overflow-y-auto scrollbar-thin">
           {sub.submissions.length === 0 ? (
             <p className="text-center text-sm text-[hsl(220,10%,45%)] py-10">Nenhum cadastro registrado ainda.</p>
           ) : filteredSubmissions.length === 0 ? (
