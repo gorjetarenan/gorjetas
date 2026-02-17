@@ -58,6 +58,28 @@ const AdminAppearance = ({ config, onUpdate }: Props) => {
     }
   };
 
+  const compressImage = (file: File, maxWidth = 1920, quality = 0.8): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ratio = Math.min(maxWidth / img.width, 1);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { reject(new Error('Canvas not supported')); return; }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(
+          (blob) => blob ? resolve(blob) : reject(new Error('Compression failed')),
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -146,18 +168,22 @@ const AdminAppearance = ({ config, onUpdate }: Props) => {
             const file = e.target.files?.[0];
             if (!file) return;
             if (!file.type.startsWith('image/')) { toast.error('Selecione um arquivo de imagem'); return; }
-            if (file.size > 5 * 1024 * 1024) { toast.error('A imagem deve ter no máximo 5MB'); return; }
+            if (file.size > 10 * 1024 * 1024) { toast.error('A imagem deve ter no máximo 10MB'); return; }
             setRaffleUploading(true);
             try {
-              const fileName = `raffle-bg-${Date.now()}.${file.name.split('.').pop()}`;
-              const { error: uploadError } = await supabase.storage.from('backgrounds').upload(fileName, file, { upsert: true });
+              const compressed = await compressImage(file);
+              const fileName = `raffle-bg-${Date.now()}.jpg`;
+              const { error: uploadError } = await supabase.storage.from('backgrounds').upload(fileName, compressed, { 
+                upsert: true,
+                contentType: 'image/jpeg'
+              });
               if (uploadError) throw uploadError;
               const { data: urlData } = supabase.storage.from('backgrounds').getPublicUrl(fileName);
               onUpdate({ raffleBackgroundImage: urlData.publicUrl });
               toast.success('Imagem do sorteio carregada!');
             } catch (err) {
               console.error('Upload error:', err);
-              toast.error('Erro ao enviar imagem.');
+              toast.error('Erro ao enviar imagem. Tente com uma imagem menor.');
             } finally {
               setRaffleUploading(false);
             }
