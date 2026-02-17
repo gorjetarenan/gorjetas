@@ -65,37 +65,37 @@ const Admin = () => {
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
 
-          <TabsContent value="appearance">
+          <TabsContent value="appearance" forceMount className="data-[state=inactive]:hidden">
             <AdminAppearance config={config} onUpdate={updateConfig} />
           </TabsContent>
-          <TabsContent value="fields">
+          <TabsContent value="fields" forceMount className="data-[state=inactive]:hidden">
             <AdminFields config={config} onUpdate={updateConfig} />
           </TabsContent>
-          <TabsContent value="texts">
+          <TabsContent value="texts" forceMount className="data-[state=inactive]:hidden">
             <AdminTexts config={config} onUpdate={updateConfig} />
           </TabsContent>
-          <TabsContent value="raffle">
+          <TabsContent value="raffle" forceMount className="data-[state=inactive]:hidden">
             <AdminRaffle config={config} submissions={submissionsHook} />
           </TabsContent>
-          <TabsContent value="rules">
+          <TabsContent value="rules" forceMount className="data-[state=inactive]:hidden">
             <AdminRules config={config} onUpdate={updateConfig} />
           </TabsContent>
-          <TabsContent value="banned">
+          <TabsContent value="banned" forceMount className="data-[state=inactive]:hidden">
             <AdminBanned banned={banned} onAdd={addBan} onRemove={removeBan} />
           </TabsContent>
-          <TabsContent value="email">
+          <TabsContent value="email" forceMount className="data-[state=inactive]:hidden">
             <AdminEmail config={config} onUpdate={updateConfig} />
           </TabsContent>
-          <TabsContent value="access">
+          <TabsContent value="access" forceMount className="data-[state=inactive]:hidden">
             <AdminAccessPassword config={config} onUpdate={updateConfig} />
           </TabsContent>
-          <TabsContent value="postback">
+          <TabsContent value="postback" forceMount className="data-[state=inactive]:hidden">
             <AdminPostback config={config} onUpdate={updateConfig} />
           </TabsContent>
-          <TabsContent value="tips-toggle">
+          <TabsContent value="tips-toggle" forceMount className="data-[state=inactive]:hidden">
             <AdminTipsToggle config={config} onUpdate={updateConfig} />
           </TabsContent>
-          <TabsContent value="export">
+          <TabsContent value="export" forceMount className="data-[state=inactive]:hidden">
             <AdminExport submissions={submissionsHook} />
           </TabsContent>
         </Tabs>
