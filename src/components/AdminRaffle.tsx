@@ -165,6 +165,26 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
                 <Users className="h-3.5 w-3.5" />
                 {sub.submissions.length}
               </span>
+              {confirmClear ? (
+                <div className="flex gap-1.5">
+                  <Button variant="destructive" size="sm" onClick={handleClearSubmissions} className="text-xs h-7 px-2">
+                    Confirmar
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setConfirmClear(false)} className="text-xs h-7 px-2 border-[hsl(220,15%,25%)] bg-transparent text-white hover:bg-[hsl(220,15%,20%)]">
+                    Cancelar
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleClearSubmissions}
+                  disabled={sub.submissions.length === 0}
+                  className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
             </div>
           </div>
 
@@ -206,30 +226,6 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
             />
           </div>
 
-          {/* Actions row */}
-          <div className="flex items-center justify-between mb-3">
-            {confirmClear ? (
-              <div className="flex gap-2">
-                <Button variant="destructive" size="sm" onClick={handleClearSubmissions} className="text-xs h-8">
-                  Confirmar
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setConfirmClear(false)} className="text-xs h-8 border-[hsl(220,15%,25%)] bg-transparent text-white hover:bg-[hsl(220,15%,20%)]">
-                  Cancelar
-                </Button>
-              </div>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearSubmissions}
-                disabled={sub.submissions.length === 0}
-                className="text-xs h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-              >
-                <Trash2 className="mr-1 h-3.5 w-3.5" /> Zerar
-              </Button>
-            )}
-          
-          </div>
 
           {/* Search */}
           <div className="relative mb-4">
