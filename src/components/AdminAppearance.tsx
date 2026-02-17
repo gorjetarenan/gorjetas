@@ -71,7 +71,7 @@ const AdminAppearance = ({ config, onUpdate }: Props) => {
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         canvas.toBlob(
           (blob) => blob ? resolve(blob) : reject(new Error('Compression failed')),
-          'image/jpeg',
+          'image/webp',
           quality
         );
       };
@@ -172,10 +172,10 @@ const AdminAppearance = ({ config, onUpdate }: Props) => {
             setRaffleUploading(true);
             try {
               const compressed = await compressImage(file);
-              const fileName = `raffle-bg-${Date.now()}.jpg`;
+              const fileName = `raffle-bg-${Date.now()}.webp`;
               const { error: uploadError } = await supabase.storage.from('backgrounds').upload(fileName, compressed, { 
                 upsert: true,
-                contentType: 'image/jpeg'
+                contentType: 'image/webp'
               });
               if (uploadError) throw uploadError;
               const { data: urlData } = supabase.storage.from('backgrounds').getPublicUrl(fileName);
