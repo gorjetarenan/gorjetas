@@ -34,10 +34,12 @@ const AdminDashboard = ({ submissions, wins }: Props) => {
     }
 
     const filteredWins = wins.filter(w => new Date(w.date) >= startDate);
-    const filteredSubmissions = submissions.filter(s => new Date(s.createdAt) >= startDate);
 
     // Unique winners by accountId
     const uniqueWinners = new Set(filteredWins.map(w => w.submissionData?.accountId).filter(Boolean));
+
+    // All-time unique participants (from wins - persists even after clearing submissions)
+    const allTimeParticipants = new Set(wins.map(w => w.submissionData?.accountId).filter(Boolean));
 
     // Top winners
     const winnerCounts: Record<string, { name: string; count: number }> = {};
@@ -59,7 +61,7 @@ const AdminDashboard = ({ submissions, wins }: Props) => {
     });
 
     return {
-      totalSubmissions: filteredSubmissions.length,
+      currentSubmissions: submissions.length,
       totalWins: filteredWins.length,
       uniqueWinners: uniqueWinners.size,
       avgWinsPerDay: filteredWins.length > 0
@@ -67,7 +69,7 @@ const AdminDashboard = ({ submissions, wins }: Props) => {
         : '0',
       topWinners,
       winsPerDay: Object.entries(winsPerDay).slice(-7),
-      allTimeSubmissions: submissions.length,
+      allTimeParticipants: allTimeParticipants.size,
       allTimeWins: wins.length,
     };
   }, [submissions, wins, period]);
@@ -101,8 +103,8 @@ const AdminDashboard = ({ submissions, wins }: Props) => {
                 <Users className="h-5 w-5 text-[hsl(210,70%,60%)]" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{stats.totalSubmissions}</p>
-                <p className="text-xs text-[hsl(220,10%,50%)]">Cadastros</p>
+                <p className="text-2xl font-bold text-white">{stats.currentSubmissions}</p>
+                <p className="text-xs text-[hsl(220,10%,50%)]">Cadastros atuais</p>
               </div>
             </div>
           </CardContent>
@@ -161,8 +163,8 @@ const AdminDashboard = ({ submissions, wins }: Props) => {
         <CardContent className="px-4 pb-4">
           <div className="flex justify-between">
             <div>
-              <p className="text-lg font-bold text-white">{stats.allTimeSubmissions}</p>
-              <p className="text-xs text-[hsl(220,10%,45%)]">Total cadastros</p>
+              <p className="text-lg font-bold text-white">{stats.allTimeParticipants}</p>
+              <p className="text-xs text-[hsl(220,10%,45%)]">Participantes únicos</p>
             </div>
             <div>
               <p className="text-lg font-bold text-white">{stats.allTimeWins}</p>
@@ -170,7 +172,7 @@ const AdminDashboard = ({ submissions, wins }: Props) => {
             </div>
             <div>
               <p className="text-lg font-bold text-white">
-                {stats.allTimeSubmissions > 0 ? ((stats.allTimeWins / stats.allTimeSubmissions) * 100).toFixed(1) : '0'}%
+                {stats.allTimeParticipants > 0 ? ((stats.allTimeWins / stats.allTimeParticipants) * 100).toFixed(1) : '0'}%
               </p>
               <p className="text-xs text-[hsl(220,10%,45%)]">Taxa de sorteio</p>
             </div>
