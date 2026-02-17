@@ -1,14 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { PageConfig, Submission, RaffleWin } from '@/types/config';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Shuffle, Users, Trophy, Trash2, Dices, Pencil, X, Check, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { Shuffle, Users, Trophy, Trash2, Dices, Pencil, X, Check, Search, DollarSign, Crown, ShieldCheck } from 'lucide-react';
 
 interface SubmissionsHook {
   submissions: Submission[];
@@ -32,8 +29,6 @@ const CASINO_EMOJIS = ['🎰', '💰', '🃏', '🎲', '💎', '7️⃣', '🍒'
 const AdminRaffle = ({ config, submissions: sub }: Props) => {
   const [randomCount, setRandomCount] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [lastResults, setLastResults] = useState<RaffleWin[]>([]);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -44,6 +39,7 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Record<string, string>>({});
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [mode, setMode] = useState<'random' | 'manual'>('random');
   const spinIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -54,7 +50,6 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
 
   const startCasinoAnimation = (pendingWins: RaffleWin[]) => {
     if (pendingWins.length === 0) return;
-
     setIsSpinning(true);
     setShowResults(false);
     setLastResults(pendingWins);
@@ -70,7 +65,6 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
         allNames[Math.floor(Math.random() * allNames.length)]
       );
       setSpinningNames(randomNames);
-
       if (tick >= totalTicks) {
         if (spinIntervalRef.current) clearInterval(spinIntervalRef.current);
         setIsSpinning(false);
@@ -124,6 +118,8 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
     );
   };
 
+  const enabledFields = config.fields.filter(f => f.enabled);
+
   const filteredSubmissions = searchQuery.trim()
     ? sub.submissions.filter(s => {
         const q = searchQuery.toLowerCase();
@@ -131,279 +127,254 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
       })
     : sub.submissions;
 
+  const todayWins = sub.wins.filter(w => {
+    const d = new Date(w.date);
+    const now = new Date();
+    return d.toDateString() === now.toDateString();
+  }).length;
+
   return (
-    <div className="space-y-6">
-      {/* Cadastrados Container */}
-      <Card>
-        <CardHeader className="flex flex-col gap-3">
-          <div className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" /> Cadastrados ({sub.submissions.length})
-            </CardTitle>
-            <div className="flex gap-2">
-              {confirmClear ? (
-                <>
-                  <Button variant="destructive" size="sm" onClick={handleClearSubmissions}>
-                    Confirmar Exclusão
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => setConfirmClear(false)}>
-                    Cancelar
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleClearSubmissions}
-                  disabled={sub.submissions.length === 0}
-                >
-                  <Trash2 className="mr-1 h-4 w-4 text-destructive" /> Zerar Cadastros
-                </Button>
-              )}
+    <div className="space-y-4">
+      {/* Main Card */}
+      <div className="rounded-2xl bg-[hsl(220,20%,12%)] border border-[hsl(220,15%,20%)] overflow-hidden">
+        {/* Header */}
+        <div className="px-5 pt-5 pb-3">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-bold text-white">Lista de inscritos</h2>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(220,15%,18%)] border border-[hsl(220,15%,25%)] px-3 py-1 text-sm font-semibold text-white">
+                <Users className="h-3.5 w-3.5" />
+                {sub.submissions.length}
+              </span>
             </div>
           </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Pesquisar por nome ou ID..."
-              value={searchQuery}
-              onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-              className="pl-9"
+
+          {/* Stats row */}
+          <div className="flex items-center justify-between mb-1">
+            <span className="flex items-center gap-1.5 text-sm text-[hsl(140,60%,55%)]">
+              <DollarSign className="h-3.5 w-3.5" />
+              Gorjetas enviadas hoje
+            </span>
+            <span className="inline-flex items-center rounded-full bg-[hsl(140,60%,20%)] border border-[hsl(140,50%,30%)] px-2.5 py-0.5 text-xs font-bold text-[hsl(140,60%,55%)]">
+              {todayWins}/{config.maxDailyWins || '∞'}
+            </span>
+          </div>
+          <div className="h-1.5 rounded-full bg-[hsl(220,15%,18%)] mb-4">
+            <div
+              className="h-full rounded-full bg-[hsl(140,60%,45%)] transition-all"
+              style={{ width: `${Math.min(100, (todayWins / (config.maxDailyWins || 100)) * 100)}%` }}
             />
           </div>
-        </CardHeader>
-        <CardContent>
-          {sub.submissions.length === 0 ? (
-            <p className="text-center text-sm text-muted-foreground py-8">Nenhum cadastro registrado ainda.</p>
-          ) : (
-             <>
-             <div className="rounded-lg border border-border/50">
-               <table className="w-full text-sm">
-                 <thead className="bg-secondary">
-                   <tr>
-                     <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">#</th>
-                     {config.fields.filter(f => f.enabled).map(field => (
-                       <th key={field.id} className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">{field.label}</th>
-                     ))}
-                     <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Data</th>
-                     <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">Ações</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                   {(() => {
-                      const totalPages = Math.ceil(filteredSubmissions.length / itemsPerPage);
-                      const safePage = Math.min(currentPage, totalPages || 1);
-                      const start = (safePage - 1) * itemsPerPage;
-                      const paged = filteredSubmissions.slice(start, start + itemsPerPage);
-                      const enabledFields = config.fields.filter(f => f.enabled);
-                     return paged.map((s, i) => (
-                       <tr key={s.id} className="border-t border-border/30 transition-colors hover:bg-muted/30">
-                         <td className="px-3 py-2 text-muted-foreground">{start + i + 1}</td>
-                         {editingId === s.id ? (
-                           enabledFields.map(field => (
-                             <td key={field.id} className="px-3 py-2">
-                               <Input
-                                 value={editData[field.id] || ''}
-                                 onChange={e => setEditData(prev => ({ ...prev, [field.id]: e.target.value }))}
-                                 className="h-7 text-xs"
-                               />
-                             </td>
-                           ))
-                         ) : (
-                           enabledFields.map(field => (
-                             <td key={field.id} className="px-3 py-2 text-foreground">{s.data[field.id] || '—'}</td>
-                           ))
-                         )}
-                         <td className="px-3 py-2 text-muted-foreground text-xs">
-                           {new Date(s.createdAt).toLocaleDateString('pt-BR')}
-                         </td>
-                         <td className="px-3 py-2 text-right">
-                           {editingId === s.id ? (
-                             <div className="flex justify-end gap-1">
-                               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { sub.updateSubmission(s.id, editData); setEditingId(null); toast.success('Cadastro atualizado'); }}>
-                                 <Check className="h-3.5 w-3.5 text-green-500" />
-                               </Button>
-                               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingId(null)}>
-                                 <X className="h-3.5 w-3.5 text-muted-foreground" />
-                               </Button>
-                             </div>
-                           ) : confirmDeleteId === s.id ? (
-                             <div className="flex justify-end gap-1">
-                               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { sub.removeSubmission(s.id); setConfirmDeleteId(null); toast.success('Cadastro removido'); }}>
-                                 <Check className="h-3.5 w-3.5 text-destructive" />
-                               </Button>
-                               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConfirmDeleteId(null)}>
-                                 <X className="h-3.5 w-3.5 text-muted-foreground" />
-                               </Button>
-                             </div>
-                           ) : (
-                             <div className="flex justify-end gap-1">
-                               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingId(s.id); setEditData({ ...s.data }); }}>
-                                 <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                               </Button>
-                               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConfirmDeleteId(s.id)}>
-                                 <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                               </Button>
-                             </div>
-                           )}
-                         </td>
-                       </tr>
-                     ));
-                   })()}
-                 </tbody>
-               </table>
-             </div>
 
-             {/* Pagination */}
-             {filteredSubmissions.length > itemsPerPage && (() => {
-                const totalPages = Math.ceil(filteredSubmissions.length / itemsPerPage);
-               return (
-                 <div className="flex items-center justify-between pt-3">
-                   <p className="text-xs text-muted-foreground">
-                     Página {Math.min(currentPage, totalPages)} de {totalPages}
-                   </p>
-                   <div className="flex items-center gap-1">
-                     <Button
-                       variant="outline"
-                       size="icon"
-                       className="h-8 w-8"
-                       disabled={currentPage <= 1}
-                       onClick={() => setCurrentPage(p => p - 1)}
-                     >
-                       <ChevronLeft className="h-4 w-4" />
-                     </Button>
-                     <Button
-                       variant="outline"
-                       size="icon"
-                       className="h-8 w-8"
-                       disabled={currentPage >= totalPages}
-                       onClick={() => setCurrentPage(p => p + 1)}
-                     >
-                       <ChevronRight className="h-4 w-4" />
-                     </Button>
-                   </div>
-                 </div>
-               );
-             })()}
-             </>
-           )}
-         </CardContent>
-       </Card>
-
-      {/* Sorteio */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-accent" /> Sorteio de Gorjetas
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="mb-4 text-sm text-muted-foreground">
-            Sorteios realizados: <strong className="text-foreground">{sub.wins.length}</strong>
-          </p>
-
-          <Tabs defaultValue="random">
-            <TabsList className="mb-4">
-              <TabsTrigger value="random">
-                <Shuffle className="mr-1 h-4 w-4" /> Aleatório
-              </TabsTrigger>
-              <TabsTrigger value="manual">
-                <Users className="mr-1 h-4 w-4" /> Manual
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="random" className="space-y-4">
-              <div className="flex items-end gap-3">
-                <div className="space-y-2">
-                  <Label>Quantidade de Ganhadores</Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={sub.submissions.length || 1}
-                    value={randomCount}
-                    onChange={e => setRandomCount(parseInt(e.target.value) || 1)}
-                    className="w-32"
-                  />
-                </div>
-                <Button onClick={handleRandomDraw} disabled={isSpinning}>
-                  <Dices className="mr-2 h-4 w-4" /> {isSpinning ? 'Sorteando...' : 'Sortear'}
+          {/* Actions row */}
+          <div className="flex items-center justify-between mb-3">
+            {confirmClear ? (
+              <div className="flex gap-2">
+                <Button variant="destructive" size="sm" onClick={handleClearSubmissions} className="text-xs h-8">
+                  Confirmar
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setConfirmClear(false)} className="text-xs h-8 border-[hsl(220,15%,25%)] bg-transparent text-white hover:bg-[hsl(220,15%,20%)]">
+                  Cancelar
                 </Button>
               </div>
-            </TabsContent>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearSubmissions}
+                disabled={sub.submissions.length === 0}
+                className="text-xs h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="mr-1 h-3.5 w-3.5" /> Zerar
+              </Button>
+            )}
+            <button
+              onClick={() => setMode(mode === 'random' ? 'manual' : 'random')}
+              className="h-8 w-8 rounded-lg bg-[hsl(220,15%,18%)] border border-[hsl(220,15%,25%)] flex items-center justify-center text-[hsl(220,10%,60%)] hover:text-white transition-colors"
+            >
+              <Shuffle className="h-4 w-4" />
+            </button>
+          </div>
 
-            <TabsContent value="manual" className="space-y-4">
-              {sub.submissions.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum cadastro disponível.</p>
-              ) : (
-                <>
-                  <div className="max-h-64 space-y-1 overflow-y-auto rounded-lg border border-border/50 p-3">
-                    {sub.submissions.map(s => {
-                      const eligible = sub.canWin(s.data, config);
-                      return (
-                        <label
-                          key={s.id}
-                          className={`flex cursor-pointer items-center gap-3 rounded-md p-2 transition-colors hover:bg-muted/50 ${!eligible ? 'opacity-40 cursor-not-allowed' : ''}`}
-                        >
-                          <Checkbox
-                            checked={selectedIds.includes(s.id)}
-                            onCheckedChange={() => toggleSelect(s.id)}
-                            disabled={!eligible}
+          {/* Search */}
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[hsl(220,10%,45%)]" />
+            <Input
+              placeholder="Buscar por nome ou credencial..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-10 bg-[hsl(220,15%,16%)] border-[hsl(220,15%,22%)] text-white placeholder:text-[hsl(220,10%,40%)] focus-visible:ring-[hsl(45,80%,50%)] rounded-xl h-11"
+            />
+          </div>
+        </div>
+
+        {/* Participants Grid */}
+        <div className="px-5 pb-3 max-h-[400px] overflow-y-auto scrollbar-thin">
+          {sub.submissions.length === 0 ? (
+            <p className="text-center text-sm text-[hsl(220,10%,45%)] py-10">Nenhum cadastro registrado ainda.</p>
+          ) : filteredSubmissions.length === 0 ? (
+            <p className="text-center text-sm text-[hsl(220,10%,45%)] py-10">Nenhum resultado encontrado.</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              {filteredSubmissions.map(s => {
+                const firstField = enabledFields[0];
+                const secondField = enabledFields[1];
+                const name = firstField ? (s.data[firstField.id] || '—') : '—';
+                const secondary = secondField ? (s.data[secondField.id] || '') : s.id.slice(0, 8);
+                const isSelected = selectedIds.includes(s.id);
+                const eligible = sub.canWin(s.data, config);
+
+                return (
+                  <div
+                    key={s.id}
+                    onClick={() => {
+                      if (mode === 'manual' && eligible) toggleSelect(s.id);
+                    }}
+                    className={`
+                      relative flex items-center gap-2 rounded-xl border p-3 transition-all
+                      ${mode === 'manual' ? (eligible ? 'cursor-pointer' : 'cursor-not-allowed opacity-40') : ''}
+                      ${isSelected
+                        ? 'border-[hsl(45,80%,50%)] bg-[hsl(45,80%,50%,0.08)]'
+                        : 'border-[hsl(220,15%,20%)] bg-[hsl(220,18%,14%)] hover:border-[hsl(220,15%,28%)]'}
+                    `}
+                  >
+                    {/* Edit / Delete overlay */}
+                    {editingId === s.id ? (
+                      <div className="flex-1 space-y-1">
+                        {enabledFields.map(field => (
+                          <Input
+                            key={field.id}
+                            value={editData[field.id] || ''}
+                            onChange={e => setEditData(prev => ({ ...prev, [field.id]: e.target.value }))}
+                            className="h-7 text-xs bg-[hsl(220,15%,18%)] border-[hsl(220,15%,25%)] text-white"
+                            placeholder={field.label}
                           />
-                          <span className="flex-1 text-sm text-foreground">
-                            {Object.values(s.data).join(' — ')}
-                          </span>
-                          {!eligible && (
-                            <span className="text-xs text-destructive">Limite atingido</span>
+                        ))}
+                        <div className="flex gap-1 pt-1">
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { sub.updateSubmission(s.id, editData); setEditingId(null); toast.success('Atualizado'); }}>
+                            <Check className="h-3 w-3 text-[hsl(140,60%,55%)]" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingId(null)}>
+                            <X className="h-3 w-3 text-[hsl(220,10%,60%)]" />
+                          </Button>
+                        </div>
+                      </div>
+                    ) : confirmDeleteId === s.id ? (
+                      <div className="flex-1 flex items-center justify-between">
+                        <span className="text-xs text-destructive">Excluir?</span>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { sub.removeSubmission(s.id); setConfirmDeleteId(null); toast.success('Removido'); }}>
+                            <Check className="h-3 w-3 text-destructive" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setConfirmDeleteId(null)}>
+                            <X className="h-3 w-3 text-[hsl(220,10%,60%)]" />
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-white truncate">{name}</p>
+                          <p className="text-xs text-[hsl(220,10%,50%)] truncate">{secondary}</p>
+                        </div>
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          {mode === 'manual' && (
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() => toggleSelect(s.id)}
+                              disabled={!eligible}
+                              className="mr-1 border-[hsl(220,15%,30%)] data-[state=checked]:bg-[hsl(45,80%,50%)] data-[state=checked]:border-[hsl(45,80%,50%)]"
+                            />
                           )}
-                        </label>
-                      );
-                    })}
+                          <DollarSign className="h-4 w-4 text-[hsl(140,50%,40%)]" />
+                          <button
+                            onClick={e => { e.stopPropagation(); setEditingId(s.id); setEditData({ ...s.data }); }}
+                            className="p-1 rounded text-[hsl(220,10%,40%)] hover:text-white transition-colors"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </button>
+                          <button
+                            onClick={e => { e.stopPropagation(); setConfirmDeleteId(s.id); }}
+                            className="p-1 rounded text-[hsl(220,10%,40%)] hover:text-destructive transition-colors"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
-                  <Button onClick={handleManualDraw} disabled={selectedIds.length === 0 || isSpinning}>
-                    <Trophy className="mr-2 h-4 w-4" /> Confirmar ({selectedIds.length})
-                  </Button>
-                </>
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Draw Button */}
+        <div className="px-5 pb-5 pt-3">
+          {mode === 'random' ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <label className="text-xs text-[hsl(220,10%,55%)]">Qtd:</label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={sub.submissions.length || 1}
+                  value={randomCount}
+                  onChange={e => setRandomCount(parseInt(e.target.value) || 1)}
+                  className="w-20 h-9 bg-[hsl(220,15%,16%)] border-[hsl(220,15%,22%)] text-white text-center text-sm rounded-lg"
+                />
+              </div>
+              <Button
+                onClick={handleRandomDraw}
+                disabled={isSpinning || sub.submissions.length === 0}
+                className="w-full h-14 rounded-2xl text-base font-bold bg-gradient-to-r from-[hsl(35,90%,50%)] to-[hsl(45,95%,55%)] hover:from-[hsl(35,90%,45%)] hover:to-[hsl(45,95%,50%)] text-[hsl(30,50%,10%)] shadow-lg shadow-[hsl(40,80%,40%,0.3)] border-0"
+              >
+                <Crown className="mr-2 h-5 w-5" />
+                {isSpinning ? 'SORTEANDO...' : 'SORTEAR ALEATÓRIO'}
+              </Button>
+            </div>
+          ) : (
+            <Button
+              onClick={handleManualDraw}
+              disabled={selectedIds.length === 0 || isSpinning}
+              className="w-full h-14 rounded-2xl text-base font-bold bg-gradient-to-r from-[hsl(35,90%,50%)] to-[hsl(45,95%,55%)] hover:from-[hsl(35,90%,45%)] hover:to-[hsl(45,95%,50%)] text-[hsl(30,50%,10%)] shadow-lg shadow-[hsl(40,80%,40%,0.3)] border-0"
+            >
+              <Trophy className="mr-2 h-5 w-5" />
+              {isSpinning ? 'SORTEANDO...' : `SORTEAR SELECIONADOS (${selectedIds.length})`}
+            </Button>
+          )}
+
+          {/* Footer */}
+          <p className="flex items-center justify-center gap-1.5 text-xs text-[hsl(220,10%,40%)] mt-3">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Sorteio justo e transparente
+          </p>
+        </div>
+      </div>
 
       {/* Raffle Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(open) => { if (!isSpinning) setDialogOpen(open); }}>
-        <DialogContent className="sm:max-w-md border-accent/30" onPointerDownOutside={e => { if (isSpinning) e.preventDefault(); }}>
+        <DialogContent className="sm:max-w-md border-[hsl(45,80%,50%,0.3)] bg-[hsl(220,20%,12%)]" onPointerDownOutside={e => { if (isSpinning) e.preventDefault(); }}>
           {isSpinning && (
             <div className="flex flex-col items-center gap-6 py-6">
               <div className="flex gap-3 text-4xl animate-bounce">
                 {CASINO_EMOJIS.slice(0, 5).map((emoji, i) => (
-                  <span
-                    key={i}
-                    className="inline-block"
-                    style={{
-                      animation: `spin 0.3s linear infinite`,
-                      animationDelay: `${i * 0.1}s`,
-                    }}
-                  >
+                  <span key={i} className="inline-block" style={{ animation: `spin 0.3s linear infinite`, animationDelay: `${i * 0.1}s` }}>
                     {emoji}
                   </span>
                 ))}
               </div>
-
-              <div className="relative w-full overflow-hidden rounded-xl border-2 border-accent/40 bg-secondary/80 p-4">
-                <div className="absolute inset-0 bg-gradient-to-r from-accent/5 via-accent/10 to-accent/5 animate-pulse" />
+              <div className="relative w-full overflow-hidden rounded-xl border-2 border-[hsl(45,80%,50%,0.3)] bg-[hsl(220,18%,14%)] p-4">
+                <div className="absolute inset-0 bg-gradient-to-r from-[hsl(45,80%,50%,0.03)] via-[hsl(45,80%,50%,0.08)] to-[hsl(45,80%,50%,0.03)] animate-pulse" />
                 <div className="relative space-y-2">
                   {spinningNames.map((name, i) => (
-                    <div
-                      key={i}
-                      className="rounded-lg bg-muted/60 px-4 py-2 text-center font-mono text-sm text-accent transition-all"
-                    >
+                    <div key={i} className="rounded-lg bg-[hsl(220,15%,18%)] px-4 py-2 text-center font-mono text-sm text-[hsl(45,80%,60%)] transition-all">
                       {name}
                     </div>
                   ))}
                 </div>
               </div>
-
-              <p className="text-sm font-medium text-accent animate-pulse">🎰 Sorteando...</p>
+              <p className="text-sm font-medium text-[hsl(45,80%,55%)] animate-pulse">🎰 Sorteando...</p>
             </div>
           )}
 
@@ -411,24 +382,23 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
             <div className="py-4">
               <div className="mb-6 text-center">
                 <div className="mb-2 text-5xl">🎉🏆🎉</div>
-                <h3 className="text-2xl font-bold text-accent">
+                <h3 className="text-2xl font-bold text-[hsl(45,80%,55%)]">
                   {lastResults.length === 1 ? 'Ganhador!' : 'Ganhadores!'}
                 </h3>
-                <p className="text-sm text-muted-foreground mt-1">Parabéns aos sorteados!</p>
+                <p className="text-sm text-[hsl(220,10%,50%)] mt-1">Parabéns aos sorteados!</p>
               </div>
-
               <div className="space-y-3">
                 {lastResults.map((w, i) => (
                   <div
                     key={w.id}
-                    className="flex items-center gap-4 rounded-xl border border-accent/20 bg-accent/5 p-4 animate-fade-in"
+                    className="flex items-center gap-4 rounded-xl border border-[hsl(45,80%,50%,0.2)] bg-[hsl(45,80%,50%,0.05)] p-4 animate-fade-in"
                     style={{ animationDelay: `${i * 0.15}s`, animationFillMode: 'backwards' }}
                   >
-                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-lg font-bold text-accent-foreground shadow-lg">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[hsl(35,90%,50%)] to-[hsl(45,95%,55%)] text-lg font-bold text-[hsl(30,50%,10%)] shadow-lg">
                       {i + 1}
                     </span>
                     <div className="flex-1">
-                      <span className="text-base font-semibold text-foreground">
+                      <span className="text-base font-semibold text-white">
                         {Object.values(w.submissionData).join(' — ')}
                       </span>
                     </div>
