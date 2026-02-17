@@ -33,7 +33,13 @@ const Admin = () => {
 
   if (view === 'raffle') {
     return (
-      <div className="min-h-screen bg-background p-3 pb-8 md:p-8">
+      <div
+        className="min-h-screen p-3 pb-8 md:p-8 bg-cover bg-center bg-no-repeat"
+        style={config.raffleBackgroundImage
+          ? { backgroundImage: `url(${config.raffleBackgroundImage})` }
+          : { backgroundColor: 'hsl(var(--background))' }
+        }
+      >
         <div className="mx-auto max-w-5xl">
           <div className="mb-4 flex items-center justify-between md:mb-6">
             <h1 className="text-lg font-bold text-foreground md:text-2xl">Sorteio</h1>

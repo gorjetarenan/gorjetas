@@ -16,7 +16,9 @@ interface Props {
 
 const AdminAppearance = ({ config, onUpdate }: Props) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const raffleFileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [raffleUploading, setRaffleUploading] = useState(false);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -135,6 +137,46 @@ const AdminAppearance = ({ config, onUpdate }: Props) => {
             )}
           </div>
         )}
+
+        {/* Raffle Background */}
+        <div className="border-t border-border/30 pt-6 space-y-4">
+          <p className="text-sm font-semibold text-foreground">Fundo da Tela de Sorteio</p>
+          <p className="text-xs text-muted-foreground">Imagem de fundo para a tela de sorteio. Se não configurada, usa o tema padrão.</p>
+          <input ref={raffleFileInputRef} type="file" accept="image/*" onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) { toast.error('Selecione um arquivo de imagem'); return; }
+            if (file.size > 5 * 1024 * 1024) { toast.error('A imagem deve ter no máximo 5MB'); return; }
+            setRaffleUploading(true);
+            try {
+              const fileName = `raffle-bg-${Date.now()}.${file.name.split('.').pop()}`;
+              const { error: uploadError } = await supabase.storage.from('backgrounds').upload(fileName, file, { upsert: true });
+              if (uploadError) throw uploadError;
+              const { data: urlData } = supabase.storage.from('backgrounds').getPublicUrl(fileName);
+              onUpdate({ raffleBackgroundImage: urlData.publicUrl });
+              toast.success('Imagem do sorteio carregada!');
+            } catch (err) {
+              console.error('Upload error:', err);
+              toast.error('Erro ao enviar imagem.');
+            } finally {
+              setRaffleUploading(false);
+            }
+          }} className="hidden" />
+          <div className="flex gap-3">
+            <Button variant="outline" className="flex-1" onClick={() => raffleFileInputRef.current?.click()} disabled={raffleUploading}>
+              {raffleUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+              {raffleUploading ? 'Enviando...' : config.raffleBackgroundImage ? 'Trocar Imagem' : 'Enviar Imagem'}
+            </Button>
+            {config.raffleBackgroundImage && (
+              <Button variant="outline" onClick={() => onUpdate({ raffleBackgroundImage: '' })}>
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            )}
+          </div>
+          {config.raffleBackgroundImage && (
+            <div className="h-40 rounded-lg bg-cover bg-center border border-border/30" style={{ backgroundImage: `url(${config.raffleBackgroundImage})` }} />
+          )}
+        </div>
 
         {/* Button Colors */}
         <div className="border-t border-border/30 pt-6 space-y-4">
