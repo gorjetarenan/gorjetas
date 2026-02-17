@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Users, Trophy, Trash2, Pencil, X, Check, Search, DollarSign, Crown, ShieldCheck } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 
 interface SubmissionsHook {
   submissions: Submission[];
@@ -15,6 +14,7 @@ interface SubmissionsHook {
   clearSubmissions: () => void | Promise<void>;
   updateSubmission: (id: string, data: Record<string, string>) => void | Promise<void>;
   removeSubmission: (id: string) => void | Promise<void>;
+  updateWinTipValue: (winId: string, tipValue: string) => Promise<void>;
   drawRandom: (count: number, config: PageConfig) => Promise<{ winners: Submission[]; wins: RaffleWin[] }>;
   drawSelected: (ids: string[], config: PageConfig) => Promise<RaffleWin[]>;
   canWin: (submissionData: Record<string, string>, config: PageConfig) => boolean;
@@ -454,7 +454,7 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
                     for (const w of lastResults) {
                       const tipValue = tipSelections[w.id];
                       if (tipValue) {
-                        await supabase.from('raffle_wins').update({ tip_value: tipValue }).eq('id', w.id);
+                        await sub.updateWinTipValue(w.id, tipValue);
                       }
                     }
                     setTipSelections({});

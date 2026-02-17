@@ -249,6 +249,11 @@ export function useSubmissions() {
     setWins(prev => prev.filter(w => w.submissionId !== id));
   }, []);
 
+  const updateWinTipValue = useCallback(async (winId: string, tipValue: string) => {
+    await supabase.from('raffle_wins').update({ tip_value: tipValue } as any).eq('id', winId);
+    setWins(prev => prev.map(w => w.id === winId ? { ...w, tipValue } : w));
+  }, []);
+
   return {
     submissions,
     wins,
@@ -257,6 +262,7 @@ export function useSubmissions() {
     clearSubmissions,
     updateSubmission,
     removeSubmission,
+    updateWinTipValue,
     canWin,
     drawRandom,
     drawSelected,
