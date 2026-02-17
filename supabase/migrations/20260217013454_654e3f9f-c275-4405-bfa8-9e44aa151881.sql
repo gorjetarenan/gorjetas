@@ -1,0 +1,1 @@
+ALTER TABLE public.raffle_wins ADD COLUMN tip_value TEXT DEFAULT NULL;

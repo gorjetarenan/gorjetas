@@ -1,11 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { PageConfig, Submission, RaffleWin } from '@/types/config';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Users, Trophy, Trash2, Pencil, X, Check, Search, DollarSign, Crown, ShieldCheck } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SubmissionsHook {
   submissions: Submission[];
@@ -39,7 +41,8 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Record<string, string>>({});
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  
+  const [tipSelections, setTipSelections] = useState<Record<string, string>>({});
+  const [awaitingTipSelection, setAwaitingTipSelection] = useState(false);
   const spinIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -392,11 +395,46 @@ const AdminRaffle = ({ config, submissions: sub }: Props) => {
                       <span className="text-base font-semibold text-white">
                         {Object.values(w.submissionData).join(' — ')}
                       </span>
+                      {config.tipValuesEnabled && config.tipValues.length > 0 && (
+                        <div className="mt-2">
+                          <Select
+                            value={tipSelections[w.id] || ''}
+                            onValueChange={(val) => setTipSelections(prev => ({ ...prev, [w.id]: val }))}
+                          >
+                            <SelectTrigger className="h-9 bg-[hsl(220,15%,18%)] border-[hsl(220,15%,25%)] text-white w-full">
+                              <SelectValue placeholder="Selecione o valor da gorjeta" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {config.tipValues.map(val => (
+                                <SelectItem key={val} value={val}>{val}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                     </div>
                     <span className="text-2xl">{CASINO_EMOJIS[i % CASINO_EMOJIS.length]}</span>
                   </div>
                 ))}
               </div>
+              {config.tipValuesEnabled && config.tipValues.length > 0 && (
+                <Button
+                  onClick={async () => {
+                    for (const w of lastResults) {
+                      const tipValue = tipSelections[w.id];
+                      if (tipValue) {
+                        await supabase.from('raffle_wins').update({ tip_value: tipValue }).eq('id', w.id);
+                      }
+                    }
+                    setTipSelections({});
+                    setDialogOpen(false);
+                    toast.success('Valores de gorjeta salvos!');
+                  }}
+                  className="w-full mt-4 bg-gradient-to-r from-[hsl(140,60%,40%)] to-[hsl(140,50%,50%)] hover:from-[hsl(140,60%,35%)] hover:to-[hsl(140,50%,45%)] text-white"
+                >
+                  <Check className="mr-2 h-4 w-4" /> Salvar Valores
+                </Button>
+              )}
             </div>
           )}
         </DialogContent>

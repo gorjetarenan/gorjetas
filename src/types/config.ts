@@ -36,6 +36,8 @@ export interface PageConfig {
   tipsDisabledMessage: string;
   tipsDisabledCtaText: string;
   tipsDisabledCtaLink: string;
+  tipValuesEnabled: boolean;
+  tipValues: string[];
 }
 
 export interface FormField {
@@ -59,6 +61,7 @@ export interface RaffleWin {
   submissionId: string;
   submissionData: Record<string, string>;
   date: string;
+  tipValue?: string | null;
 }
 
 export const defaultConfig: PageConfig = {
@@ -103,4 +106,6 @@ export const defaultConfig: PageConfig = {
   tipsDisabledMessage: '🚫 As gorjetas estão finalizadas por hoje. Volte amanhã!',
   tipsDisabledCtaText: '🎰 Cadastre-se na Casa de Apostas',
   tipsDisabledCtaLink: 'https://example.com',
+  tipValuesEnabled: false,
+  tipValues: ['R$ 5,00', 'R$ 10,00', 'R$ 20,00', 'R$ 50,00', 'R$ 100,00'],
 };

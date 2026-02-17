@@ -14,6 +14,7 @@ import AdminBanned from '@/components/AdminBanned';
 import AdminAccessPassword from '@/components/AdminAccessPassword';
 import AdminPostback from '@/components/AdminPostback';
 import AdminTipsToggle from '@/components/AdminTipsToggle';
+import AdminTipValues from '@/components/AdminTipValues';
 import AdminDashboard from '@/components/AdminDashboard';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, RotateCcw, LogOut, Settings } from 'lucide-react';
@@ -85,6 +86,7 @@ const Admin = () => {
               <TabsTrigger value="access" className="text-xs md:text-sm px-3">Acesso</TabsTrigger>
               <TabsTrigger value="postback" className="text-xs md:text-sm px-3">Postback</TabsTrigger>
               <TabsTrigger value="tips-toggle" className="text-xs md:text-sm px-3">Gorjetas</TabsTrigger>
+              <TabsTrigger value="tip-values" className="text-xs md:text-sm px-3">Valores</TabsTrigger>
               <TabsTrigger value="export" className="text-xs md:text-sm px-3">Exportar</TabsTrigger>
             </TabsList>
             <ScrollBar orientation="horizontal" />
@@ -119,6 +121,9 @@ const Admin = () => {
           </TabsContent>
           <TabsContent value="tips-toggle" forceMount className="data-[state=inactive]:hidden">
             <AdminTipsToggle config={config} onUpdate={updateConfig} />
+          </TabsContent>
+          <TabsContent value="tip-values" forceMount className="data-[state=inactive]:hidden">
+            <AdminTipValues config={config} onUpdate={updateConfig} />
           </TabsContent>
           <TabsContent value="export" forceMount className="data-[state=inactive]:hidden">
             <AdminExport submissions={submissionsHook} />

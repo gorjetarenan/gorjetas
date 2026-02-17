@@ -33,6 +33,7 @@ export function useSubmissions() {
         submissionId: row.submission_id,
         submissionData: (row.submission_data as Record<string, string>) || {},
         date: row.date,
+        tipValue: (row as any).tip_value || null,
       })));
     }
   }, []);
@@ -148,12 +149,13 @@ export function useSubmissions() {
       submissionId: row.submission_id,
       submissionData: (row.submission_data as Record<string, string>) || {},
       date: row.date,
+      tipValue: (row as any).tip_value || null,
     };
     setWins(prev => [...prev, win]);
     return win;
   }, []);
 
-  const sendWinnerEmail = useCallback(async (winnerData: Record<string, string>, config: PageConfig) => {
+  const sendWinnerEmail = useCallback(async (winnerData: Record<string, string>, config: PageConfig, tipValue?: string) => {
     if (!config.emailNotificationEnabled) return;
     const email = winnerData.email;
     if (!email) return;
@@ -163,7 +165,8 @@ export function useSubmissions() {
         .replace(/\{\{fullName\}\}/g, winnerData.fullName || '')
         .replace(/\{\{email\}\}/g, winnerData.email || '')
         .replace(/\{\{accountId\}\}/g, winnerData.accountId || '')
-        .replace(/\{\{date\}\}/g, new Date().toLocaleDateString('pt-BR'));
+        .replace(/\{\{date\}\}/g, new Date().toLocaleDateString('pt-BR'))
+        .replace(/\{\{tipValue\}\}/g, tipValue || '');
     };
 
     try {
